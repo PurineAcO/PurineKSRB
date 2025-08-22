@@ -15,7 +15,8 @@ class solver:
         self.extend_length=0.275                      # 前延长区间长度
         self.vertical_distance=0.15                   # 板凳宽度
         self.ifcrash=False                            # 碰撞标记
-        self.crashplace='NULL'                        # 碰撞位置
+        self.crashplaceF=False                        # 前碰撞位置
+        self.crashplaceB=False                        # 后碰撞位置
         self.ccha=[]                                  # 碰撞残差记录
         self.thetatable=[]
         self.x=[]
@@ -67,8 +68,8 @@ class solver:
     def solvecrash(self,ccha=1e-4):
         """input ccha, default 1e-4"""
         for i in range(0,25):
-            if (self.thetatable[0]+(7*math.pi)/4 < self.thetatable[i] < self.thetatable[0]+2*math.pi or i==0 
-                or self.thetatable[1]+(7*math.pi)/4 < self.thetatable[i] < self.thetatable[1]+2*math.pi ):
+            if (self.thetatable[0] < self.thetatable[i] < self.thetatable[0]+(9/4)*math.pi or i==0 
+                or self.thetatable[1] < self.thetatable[i] < self.thetatable[1]+(9/4)*math.pi ):
                 xA, yA = self.x[i], self.y[i]
                 xB, yB = self.x[i+1], self.y[i+1]
                 dx = xB - xA
@@ -97,14 +98,14 @@ class solver:
                     distance1 = ((y2 - y1) * x01 - (x2 - x1) * y01 + x2 * y1 - y2 * x1)/(np.sqrt((y2 - y1)** 2 + (x2 - x1)**2))
                     if abs(distance1)<ccha: # 前缘碰撞
                         self.ifcrash=True
-                        self.crashplace='front'
+                        self.crashplaceF=True
                         self.ccha.append(abs(distance1))
                     distance2 = ((y2 - y1) * x02 - (x2 - x1) * y02 + x2 * y1 - y2 * x1)/(np.sqrt((y2 - y1)** 2 + (x2 - x1)**2))
                     if abs(distance2)<ccha: # 后缘碰撞
                         self.ifcrash=True  
-                        self.crashplace='behind'
+                        self.crashplaceB=True
                         self.ccha.append(abs(distance2))
         if len(self.ccha)>0:
-            return self.ifcrash,min(self.ccha),self.crashplace
+            return self.ifcrash,min(self.ccha),self.crashplaceF,self.crashplaceB
         else:
-            return False,0,"NULL"
+            return self.ifcrash,0,self.crashplaceF,self.crashplaceB
