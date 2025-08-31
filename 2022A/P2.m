@@ -155,7 +155,7 @@ grid on;
 title(sprintf('瞬时功率曲线（平均功率：%.4f W）', P_max));
 
 
-whitebg(gcf, 'white');
+
 set(gcf, 'Position', get(gcf, 'Position').*[1 1 1.1 1.1]);
 
 
@@ -178,5 +178,4 @@ ylabel('平均功率 P (W)');
 title('阻尼系数对平均功率的影响曲线');
 legend('Location', 'best');
 grid on;
-whitebg(gcf, 'white');
     
