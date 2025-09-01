@@ -31,95 +31,9 @@ fprintf('最优 alpha = %.4f\n', alpha_opt);
 fprintf('最大平均功率 P_max = %.4f W\n', P_max);
 fprintf('迭代终止原因：%s\n', output.message);
 fprintf('总函数评估次数：%d\n', output.funccount);
- 
-
-%% result2
-tspan = 0:0.1:200*2*pi/2.2143;
-[t_opt, y_opt] = ode45(@(t,y) solver(t,y,C_opt), ...
-                       tspan, initial_conditions, ...
-                       odeset('RelTol',1e-6, 'AbsTol',1e-8));
-
-z1_opt = y_opt(:,1);        % 振子位移
-z2_opt = y_opt(:,2);        % 浮子位移
-zdot1_opt = y_opt(:,3);     % 振子速度
-zdot2_opt = y_opt(:,4);     % 浮子速度
-zr_opt = z1_opt - z2_opt;   % 相对位移
-
-
-zdot1_opt_interp = interp1(t_opt, zdot1_opt, t_power, 'spline', 0);
-zdot2_opt_interp = interp1(t_opt, zdot2_opt, t_power, 'spline', 0);
-relative_velocity_opt = zdot1_opt_interp - zdot2_opt_interp;
-instantaneous_power_opt = C_opt * abs(relative_velocity_opt).^(2 + alpha);
-
-
-figure('Position', [100 100 1000 800]);
-sgtitle(sprintf('最优阻尼系数下的PTO系统响应（C_opt=%.2f N·s/m，P_max=%.4f W）', C_opt, P_max));
-
-
-subplot(4,1,1);
-plot(t_opt, z1_opt, 'b-', 'LineWidth', 1.2, 'DisplayName', '振子位移 z1');
-hold on;
-plot(t_opt, z2_opt, 'r-', 'LineWidth', 1.2, 'DisplayName', '浮子位移 z2');
-xlabel('时间 (s)');
-ylabel('位移 (m)');
-legend('Location', 'best');
-grid on;
-title('位移响应');
-
-
-subplot(4,1,2);
-plot(t_opt, zdot1_opt, 'b-', 'LineWidth', 1.2, 'DisplayName', '振子速度');
-hold on;
-plot(t_opt, zdot2_opt, 'r-', 'LineWidth', 1.2, 'DisplayName', '浮子速度');
-xlabel('时间 (s)');
-ylabel('速度 (m/s)');
-legend('Location', 'best');
-grid on;
-title('速度响应');
-
-
-subplot(4,1,3);
-plot(t_opt, zr_opt, 'g-', 'LineWidth', 1.2);
-xlabel('时间 (s)');
-ylabel('相对位移 (m)');
-grid on;
-title('振子-浮子相对位移');
-
-
-subplot(4,1,4);
-plot(t_power, instantaneous_power_opt, 'm-', 'LineWidth', 1.2);
-xlabel('时间 (s)');
-ylabel('瞬时功率 (W)');
-grid on;
-title(sprintf('瞬时功率曲线（平均功率：%.4f W）', P_max));
-
-
-
-set(gcf, 'Position', get(gcf, 'Position').*[1 1 1.1 1.1]);
-
-
-%% result 3
-C_range = linspace(0, 100000, 50);
-P_range = zeros(size(C_range));
-
-for i = 1:length(C_range)
-    P_range(i) = calc_P(C_range(i));  % 使用现有calc_P函数，而非未定义的fitness_function
-    fprintf('计算进度: %.0f%%\r', (i/length(C_range))*100);
-end
-fprintf('\n');
-
-figure('Position', [200 200 800 500]);
-plot(C_range, P_range, 'b-', 'LineWidth', 1.5, 'DisplayName', '平均功率');
-hold on;
-plot(C_opt, P_max, 'ro', 'MarkerSize', 8, 'MarkerEdgeColor', 'k', 'DisplayName', '最优解');
-xlabel('阻尼系数 C (N·s/m)');
-ylabel('平均功率 P (W)');
-title('阻尼系数对平均功率的影响曲线');
-legend('Location', 'best');
-grid on;
 
 %% define solver
-function dydt=solver(t,y,C)
+function dydt=solver(t,y,C,alpha)
     
     % define some consts
     m1 = 2433;                          % 振子质量 (kg)
@@ -141,7 +55,7 @@ function dydt=solver(t,y,C)
     f_wave=f0*cos(omega*t);
 
     % calculate acceleration
-    zddot1 = (-K*(z1 - z2) - C*(zdot1 - zdot2)) / m1;
+    zddot1 = (-K*(z1 - z2) - C*(zdot1 - zdot2)*((abs(zdo1-zdot2))^alpha)) / m1;
     zddot2 = (f_wave - CL*zdot2 - rho_gA*z2 - m1*zddot1) / (m2 + me);
 
     % define the cols where is f^(1)
