@@ -1,125 +1,6 @@
-% ¶¨ÒåÒÑÖª¹Ì¶¨²ÎÊý
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öªï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½
    
-
-% ¶¨ÒåÄ¿±êº¯Êý£¨ÊÊÓ¦¶Èº¯Êý£©£¬·µ»Ø¸ºµÄP_bar£¬ÒòÎªgaÄ¬ÈÏ×îÐ¡»¯
-function fitness = objfun(x)
-    C = x(1);
-    MC = x(2);
-    
-    % ³õÖµÌõ¼þ
-    initial_conditions = zeros(8, 1);
-    
-    % Çó½âÊ±¼ä·¶Î§
-    t_end_total = 200*pi/omega;
-    tspan = [0, t_end_total];  
-    
-    % Çó½âÆ÷Ñ¡Ïî
-    options = odeset(...
-        'RelTol', 1e-6, ...
-        'AbsTol', 1e-8, ...
-        'MaxStep', 0.001 ...
-    );
-    
-    % µ÷ÓÃode45Çó½âÆ÷
-    [t, sol] = ode45(@(t, y) system_equations(t, y, C, MC), tspan, initial_conditions, options);
-    
-    % ÌáÈ¡½á¹û
-    zdot1 = sol(:, 5);
-    zdot2 = sol(:, 6);
-    thetadot1 = sol(:, 7);
-    thetadot2 = sol(:, 8);
-    
-    % ¼ÆËã»ý·ÖÇø¼ä
-    t_start = 100*pi/omega;
-    t_end = 200*pi/omega;
-    
-    % ÕÒµ½»ý·ÖÇø¼äË÷Òý
-    idx_start = find(t >= t_start, 1, 'first');
-    idx_end = find(t <= t_end, 1, 'last');
-    
-    % ´¦Àí±ß½çÇé¿ö
-    if isempty(idx_start) || isempty(idx_end) || idx_start > idx_end
-        fitness = -1e-9; % ¼«Ð¡Öµ£¬±ÜÃâ´íÎó
-        return;
-    end
-    
-    % ÌáÈ¡Çø¼äÄÚÊý¾Ý
-    zdot1_interval = zdot1(idx_start:idx_end);
-    zdot2_interval = zdot2(idx_start:idx_end);
-    thetadot1_interval = thetadot1(idx_start:idx_end);
-    thetadot2_interval = thetadot2(idx_start:idx_end);
-    t_interval = t(idx_start:idx_end);
-    
-    % ¼ÆËãP_bar£¨Ê±¼ä¼ÓÈ¨»ý·Ö£©
-    P_vals = C * (zdot1_interval - zdot2_interval).^2 + MC * (thetadot1_interval - thetadot2_interval).^2;
-    P_bar = trapz(t_interval, P_vals) / (t_end - t_start);
-    
-    fitness = -P_bar; % GAÄ¬ÈÏ×îÐ¡»¯£¬ËùÒÔ·µ»Ø¸ºµÄP_barÒÔ×î´ó»¯
-end
-
-% ÏµÍ³Î¢·Ö·½³Ì£¨ÄÚ²¿Ê¹ÓÃ£¬ÒÀÀµÍâ²¿¹Ì¶¨²ÎÊý£©
-function dydt = system_equations(t, y, C, MC)
-    % Íâ²¿¹Ì¶¨²ÎÊý
-    me = 1091.099;       
-    m1 = 2433;       
-    m2 = 4866;
-    f0 = 1760;       
-    omega = 1.9806;    
-    CL = 528.5018;       
-    rho = 1025;      
-    g = 9.8;     
-    A = pi;        
-    K = 80000;        
-    Ie = 7142.493;       
-    I2 = 8398.43436369;       
-    M0 = 2140;       
-    MCL = 1655.909;      
-    M3 = 8890.7;       
-    MK = 250000;   
-    
-    % ×´Ì¬±äÁ¿
-    z1 = y(1);
-    z2 = y(2);
-    theta1 = y(3);
-    theta2 = y(4);
-    zdot1 = y(5);
-    zdot2 = y(6);
-    thetadot1 = y(7);
-    thetadot2 = y(8);
-    
-    % ¼ÆËãI1
-    I1 = 202.75 + 2433 * (0.75 + z1 - z2)^2;
-    
-    % Õñ×Ó´¹µ´Í¨µÀ
-    zddot1 = (-K*(z1 - z2) - C*(zdot1 - zdot2)) / m1;
-    
-    % ¸¡×Ó´¹µ´Í¨µÀ
-    zddot2 = (f0*cos(omega*t) - CL*zdot2 - rho*g*A*z2 - m1*zddot1) / (m2 + me);
-    
-    % Õñ×ÓÐý×ªÍ¨µÀ
-    thetaddot1 = (-MC*(thetadot1 - thetadot2) - MK*(theta1 - theta2)) / I1;
-    
-    % ¸¡×ÓÐý×ªÍ¨µÀ
-    thetaddot2 = (M0*cos(omega*t) - MCL*thetadot2 - M3*theta2 - I1*thetaddot1) / (I2 + Ie);
-    
-    % ¹¹ÔìÒ»½×Î¢·Ö·½³Ì×é
-    dydt = [
-        zdot1;               % z1µÄÒ»½×µ¼Êý
-        zdot2;               % z2µÄÒ»½×µ¼Êý
-        thetadot1;           % theta1µÄÒ»½×µ¼Êý
-        thetadot2;           % theta2µÄÒ»½×µ¼Êý
-        zddot1;              % z1µÄ¶þ½×µ¼Êý
-        zddot2;              % z2µÄ¶þ½×µ¼Êý
-        thetaddot1;          % theta1µÄ¶þ½×µ¼Êý
-        thetaddot2           % theta2µÄ¶þ½×µ¼Êý
-    ];
-end
-
-% Ö÷º¯Êý£ºµ÷ÓÃGA½øÐÐÓÅ»¯
-
-
-
-% ¸³ÖµÈ«¾Ö±äÁ¿
+% ï¿½ï¿½ÖµÈ«ï¿½Ö±ï¿½ï¿½ï¿½
 me = 1091.099;       
 m1 = 2433;       
 m2 = 4866;
@@ -137,12 +18,12 @@ MCL = 1655.909;
 M3 = 8890.7;       
 MK = 250000;      
 
-% ¶¨Òå±äÁ¿¸öÊýºÍ·¶Î§
-nvars = 2; % CºÍMCÁ½¸ö±äÁ¿
-lb = [0, 0]; % ÏÂ½ç
-ub = [100000, 100000]; % ÉÏ½ç
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ï¿½Î§
+nvars = 2; % Cï¿½ï¿½MCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+lb = [0, 0]; % ï¿½Â½ï¿½
+ub = [100000, 100000]; % ï¿½Ï½ï¿½
 
-% µ÷ÓÃGAÓÅ»¯
+% ï¿½ï¿½ï¿½ï¿½GAï¿½Å»ï¿½
 options = optimoptions('ga', ...
     'PopulationSize', 50, ...
     'MaxGenerations', 50, ...
@@ -151,9 +32,127 @@ options = optimoptions('ga', ...
 
 [x_opt, fval_opt] = ga(@objfun, nvars, [], [], [], [], lb, ub, [], options);
 
-% ÏÔÊ¾½á¹û
-fprintf('×îÓÅ²ÎÊý£ºC = %.1f, MC = %.1f\n', x_opt(1), x_opt(2));
-fprintf('×î´óP_bar = %.4f\n', -fval_opt);
+% ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½
+fprintf('ï¿½ï¿½ï¿½Å²ï¿½ï¿½ï¿½ï¿½ï¿½C = %.1f, MC = %.1f\n', x_opt(1), x_opt(2));
+fprintf('ï¿½ï¿½ï¿½P_bar = %.4f\n', -fval_opt);
 
-% »æÖÆ×îÓÅ²ÎÊýÏÂµÄ¹¦ÂÊÇúÏß
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å²ï¿½ï¿½ï¿½ï¿½ÂµÄ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 plot_optimal_power(x_opt);
+
+% ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½êº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Èºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½P_barï¿½ï¿½ï¿½ï¿½ÎªgaÄ¬ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½
+function fitness = objfun(x)
+    C = x(1);
+    MC = x(2);
+    omega = 1.9806;   
+    % ï¿½ï¿½Öµï¿½ï¿½ï¿½ï¿½
+    initial_conditions = zeros(8, 1);
+    
+    % ï¿½ï¿½ï¿½Ê±ï¿½ä·¶Î§
+    t_end_total = 200*pi/omega;
+    tspan = [0, t_end_total];  
+    
+    % ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
+    options = odeset(...
+        'RelTol', 1e-6, ...
+        'AbsTol', 1e-8, ...
+        'MaxStep', 0.001 ...
+    );
+    
+    % ï¿½ï¿½ï¿½ï¿½ode45ï¿½ï¿½ï¿½ï¿½ï¿½
+    [t, sol] = ode45(@(t, y) system_equations(t, y, C, MC), tspan, initial_conditions, options);
+    
+    % ï¿½ï¿½È¡ï¿½ï¿½ï¿½
+    zdot1 = sol(:, 5);
+    zdot2 = sol(:, 6);
+    thetadot1 = sol(:, 7);
+    thetadot2 = sol(:, 8);
+    
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    t_start = 100*pi/omega;
+    t_end = 200*pi/omega;
+    
+    % ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    idx_start = find(t >= t_start, 1, 'first');
+    idx_end = find(t <= t_end, 1, 'last');
+    
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½ï¿½ï¿½
+    if isempty(idx_start) || isempty(idx_end) || idx_start > idx_end
+        fitness = -1e-9; % ï¿½ï¿½Ð¡Öµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        return;
+    end
+    
+    % ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    zdot1_interval = zdot1(idx_start:idx_end);
+    zdot2_interval = zdot2(idx_start:idx_end);
+    thetadot1_interval = thetadot1(idx_start:idx_end);
+    thetadot2_interval = thetadot2(idx_start:idx_end);
+    t_interval = t(idx_start:idx_end);
+    
+    % ï¿½ï¿½ï¿½ï¿½P_barï¿½ï¿½Ê±ï¿½ï¿½ï¿½È¨ï¿½ï¿½ï¿½Ö£ï¿½
+    P_vals = C * (zdot1_interval - zdot2_interval).^2 + MC * (thetadot1_interval - thetadot2_interval).^2;
+    P_bar = trapz(t_interval, P_vals) / (t_end - t_start);
+    
+    fitness = -P_bar; % GAÄ¬ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô·ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½P_barï¿½ï¿½ï¿½ï¿½ï¿½
+end
+
+% ÏµÍ³Î¢ï¿½Ö·ï¿½ï¿½Ì£ï¿½ï¿½Ú²ï¿½Ê¹ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â²¿ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+function dydt = system_equations(t, y, C, MC)
+    % ï¿½â²¿ï¿½Ì¶ï¿½ï¿½ï¿½ï¿½ï¿½
+    me = 1091.099;       
+    m1 = 2433;       
+    m2 = 4866;
+    f0 = 1760;       
+    omega = 1.9806;    
+    CL = 528.5018;       
+    rho = 1025;      
+    g = 9.8;     
+    A = pi;        
+    K = 80000;        
+    Ie = 7142.493;       
+    I2 = 8398.43436369;       
+    M0 = 2140;       
+    MCL = 1655.909;      
+    M3 = 8890.7;       
+    MK = 250000;   
+    
+    % ×´Ì¬ï¿½ï¿½ï¿½ï¿½
+    z1 = y(1);
+    z2 = y(2);
+    theta1 = y(3);
+    theta2 = y(4);
+    zdot1 = y(5);
+    zdot2 = y(6);
+    thetadot1 = y(7);
+    thetadot2 = y(8);
+    
+    % ï¿½ï¿½ï¿½ï¿½I1
+    I1 = 202.75 + 2433 * (0.75 + z1 - z2)^2;
+    
+    % ï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
+    zddot1 = (-K*(z1 - z2) - C*(zdot1 - zdot2)) / m1;
+    
+    % ï¿½ï¿½ï¿½Ó´ï¿½ï¿½ï¿½Í¨ï¿½ï¿½
+    zddot2 = (f0*cos(omega*t) - CL*zdot2 - rho*g*A*z2 - m1*zddot1) / (m2 + me);
+    
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÍ¨ï¿½ï¿½
+    thetaddot1 = (-MC*(thetadot1 - thetadot2) - MK*(theta1 - theta2)) / I1;
+    
+    % ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªÍ¨ï¿½ï¿½
+    thetaddot2 = (M0*cos(omega*t) - MCL*thetadot2 - M3*theta2 - I1*thetaddot1) / (I2 + Ie);
+    
+    % ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Î¢ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½
+    dydt = [
+        zdot1;               % z1ï¿½ï¿½Ò»ï¿½×µï¿½ï¿½ï¿½
+        zdot2;               % z2ï¿½ï¿½Ò»ï¿½×µï¿½ï¿½ï¿½
+        thetadot1;           % theta1ï¿½ï¿½Ò»ï¿½×µï¿½ï¿½ï¿½
+        thetadot2;           % theta2ï¿½ï¿½Ò»ï¿½×µï¿½ï¿½ï¿½
+        zddot1;              % z1ï¿½Ä¶ï¿½ï¿½×µï¿½ï¿½ï¿½
+        zddot2;              % z2ï¿½Ä¶ï¿½ï¿½×µï¿½ï¿½ï¿½
+        thetaddot1;          % theta1ï¿½Ä¶ï¿½ï¿½×µï¿½ï¿½ï¿½
+        thetaddot2           % theta2ï¿½Ä¶ï¿½ï¿½×µï¿½ï¿½ï¿½
+    ];
+end
+
+% ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GAï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½
+
+
