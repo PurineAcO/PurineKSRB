@@ -1,19 +1,30 @@
-clear; clc; close all;
 
-%% define consts
-m1 = 2433;              % 振子质量 (kg)
-m2 = 4866;              % 浮子质量 (kg)
-me = 1335.535;          % 附加惯性质量 (kg)
-K = 80000;              % 弹簧刚度 (N/m)
-C = 10000;              % 阻尼系数 (N·s/m)
-CL = 656.3616;          % 兴波阻尼系数 (N·s/m)
-rho_gA = 1025*9.8*pi;   % 静水恢复刚度 (N/m)
-f0 = 6250;              % 波浪激励力振幅 (N)
-omega = 1.4005;         % 激励角频率 (rad/s)
+% 定义已知参数值（这里使用示例值，需要根据实际情况修改）
+me = 1028.876;       % 示例值
+m1 = 2433;       % 示例值
+m2 = 4866;
+f0 = 3640;       % 示例值
+omega = 1.7152;    % 示例值
+CL = 683.4558;       % 示例值
+rho = 1025;      % 示例值
+g = 9.8;     % 重力加速度
+A = pi;        % 示例值
+K = 80000;        % 示例值
+C = 10000;        % 示例值
+Ie = 7001.914;       % 示例值
+I2 = 8289;       % 示例值
+M0 = 1690;       % 示例值
+MCL = 654.3383;      % 示例值
+M3 = 8890.7;       % 示例值
+MC = 1000;       % 示例值
+MK = 250000;       % 示例值
 
-tspan = [0, 100];       % 时间范围 [起始, 结束]
+% 初值条件：所有变量初始值为0
+% 状态向量：[z1; z2; theta1; theta2; zdot1; zdot2; thetadot1; thetadot2]
+initial_conditions = zeros(8, 1);
 
-initial_conditions = [0; 0; 0; 0];
+% 求解时间范围
+tspan = [0,100];  % 从0到10秒
 
 %% define solver
 options = odeset(...
@@ -24,87 +35,87 @@ options = odeset(...
 );
 
 
-[t, y] = ode45(...
-    @(t,y) pto_system(t, y, m1, m2, me, K, C, CL, rho_gA, f0, omega), ...
-    tspan, ...
-    initial_conditions, ...
-    options);
+% 调用ode45求解器
+[t, sol] = ode45(@(t, y) system_equations(t, y, me, m1,m2, f0, omega, CL, ...
+    rho, g, A, K, C, Ie, I1, M0, MCL, M3, MC, MK), tspan, initial_conditions, options);
 
+% 提取结果
+z1 = sol(:, 1);
+z2 = sol(:, 2);
+theta1 = sol(:, 3);
+theta2 = sol(:, 4);
+zdot1 = sol(:, 5);
+zdot2 = sol(:, 6);
+thetadot1 = sol(:, 7);
+thetadot2 = sol(:, 8);
 
-z1 = y(:, 1);       % 振子位移
-z2 = y(:, 2);       % 浮子位移
-zdot1 = y(:, 3);    % 振子速度
-zdot2 = y(:, 4);    % 浮子速度
-zr = z1 - z2;       % 相对位移
-
-%% render the result
+% 绘制结果
 figure;
-subplot(3,1,1);
-plot(t, z1, 'b', t, z2, 'r');
-xlabel('时间 (s)');
-ylabel('位移 (m)');
-legend('振子位移 z1', '浮子位移 z2');
-title('振子和浮子的位移响应');
-grid on;
+subplot(2,2,1);
+plot(t, z1, t, z2);
+legend('z1', 'z2');
+xlabel('时间');
+ylabel('位移');
+title('z1和z2随时间变化');
 
-subplot(3,1,2);
-plot(t, zdot1, 'b', t, zdot2, 'r');
-xlabel('时间 (s)');
-ylabel('速度 (m/s)');
-legend('振子速度', '浮子速度');
-grid on;
+subplot(2,2,2);
+plot(t, theta1, t, theta2);
+legend('\theta1', '\theta2');
+xlabel('时间');
+ylabel('角度');
+title('\theta1和\theta2随时间变化');
 
-subplot(3,1,3);
-plot(t, zr, 'g');
-xlabel('时间 (s)');
-ylabel('相对位移 (m)');
-title('振子相对于浮子的位移');
-grid on;
+subplot(2,2,3);
+plot(t, zdot1, t, zdot2);
+legend('z1速度', 'z2速度');
+xlabel('时间');
+ylabel('速度');
+title('速度随时间变化');
 
-
-time_points = [10, 20, 40, 60, 100];
-
-fprintf('高精度特定时间点结果：\n');
-fprintf('时间(s)\t振子位移(m)\t振子速度(m/s)\t浮子位移(m)\t浮子速度(m/s)\n');
-
-for i = 1:length(time_points)
-    z1_interp = interp1(t, z1, time_points(i), 'spline');
-    z2_interp = interp1(t, z2, time_points(i), 'spline');
-    zdot1_interp = interp1(t, zdot1, time_points(i), 'spline');
-    zdot2_interp = interp1(t, zdot2, time_points(i), 'spline');
-    
-    results.Z1_Displacement(i) = z1_interp;
-    results.Z1_Velocity(i) = zdot1_interp;
-    results.Z2_Displacement(i) = z2_interp;
-    results.Z2_Velocity(i) = zdot2_interp;
-    
-    fprintf('%.1f\t%.8f\t%.8f\t%.8f\t%.8f\n', ...
-        time_points(i), ...
-        z1_interp, ...
-        zdot1_interp, ...
-        z2_interp, ...
-        zdot2_interp);
-end
+subplot(2,2,4);
+plot(t, thetadot1, t, thetadot2);
+legend('\theta1角速度', '\theta2角速度');
+xlabel('时间');
+ylabel('角速度');
+title('角速度随时间变化');
 
 
-%% function and equals
-function dydt = pto_system(t, y, m1, m2, me, K, C, CL, rho_gA, f0, omega)
-    % functions
+function dydt = system_equations(t, y, me, m1, m2,f0, omega, CL, rho, g, A, K, C, Ie, I2, M0, MCL, M3, MC, MK)
+    % 状态变量
     z1 = y(1);
     z2 = y(2);
-    zdot1 = y(3);
-    zdot2 = y(4);
+    theta1 = y(3);
+    theta2 = y(4);
+    zdot1 = y(5);
+    zdot2 = y(6);
+    thetadot1 = y(7);
+    thetadot2 = y(8);
     
-    % f_{3}
-    f_wave = f0 * cos(omega * t);
+    % 计算I1，1表示振子，2表示浮子
+    I1 = 202.75 + 2433 * (0.75 + z1 - z2);
     
-    % ddot
-    zddot1 = (-K*(z1 - z2) - C*sqrt(abs(zdot1-zdot2))*(zdot1 - zdot2)) / m1;
-    zddot2 = (f_wave - CL*zdot2 - rho_gA*z2 - m1*zddot1) / (m2 + me);
+    % 振子垂荡通道
+    zddot1 = (-K*(z1 - z2) - C*(zdot1 - zdot2)) / m1;
     
-    % define func
-    dydt = [zdot1;
-            zdot2;
-            zddot1;
-            zddot2];
+    % 代入第一个方程求解z2的二阶导数
+    zddot2 = (f0*cos(omega*t) - CL*zdot2 - rho*g*A*z2 - m1*zddot1) / (m2 + me);
+    
+    % 从第四个方程求解theta1的二阶导数
+    thetaddot1 = (-MC*(thetadot1 - thetadot2) - MK*(theta1 - theta2)) / I1;
+    
+    % 代入第三个方程求解theta2的二阶导数
+    thetaddot2 = (M0*cos(omega*t) - MCL*thetadot2 - M3*theta2 - I1*thetaddot1) / (I2 + Ie);
+    
+    % 构造一阶微分方程组
+    dydt = [
+        zdot1;               % z1的一阶导数
+        zdot2;               % z2的一阶导数
+        thetadot1;           % theta1的一阶导数
+        thetadot2;           % theta2的一阶导数
+        zddot1;              % z1的二阶导数
+        zddot2;              % z2的二阶导数
+        thetaddot1;          % theta1的二阶导数
+        thetaddot2           % theta2的二阶导数
+    ];
 end
+    
