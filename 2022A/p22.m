@@ -1,15 +1,12 @@
 clear; clc; close all;
 
-
-
 %% define GA
-% define some consts
-nvars = 1;                          % 优化变量数量
-lb = 0;                             % 变量下界
-ub = 50000;                        % 变量上界
-PopulationSize = 50;                % 种群规模
-MaxGenerations = 5;                % 最大迭代次数
-CrossoverFraction = 0.8;            % 交叉概率
+nvars = 2;                          % 优化变量数量 [C, alpha]
+lb = [0, 0];                        % 下界
+ub = [100000, 0.5];                 % 上界
+PopulationSize = 50;                
+MaxGenerations = 10;                % 可以适当增加迭代次数
+CrossoverFraction = 0.8;            
 
 % define GA
 ga_options = optimoptions('ga', ...
@@ -20,18 +17,21 @@ ga_options = optimoptions('ga', ...
     'Display', 'iter', ...
     'PlotFcn', @gaplotbestf);
 
-[C_opt, P_max, exitflag, output] = ga(@(C) -calc_P(C), ...
+[x_opt, P_max, exitflag, output] = ga(@(x) -calc_P(x), ...
                                       nvars, [], [], [], [], lb, ub, [], ga_options);
 
+C_opt = x_opt(1);
+alpha_opt = x_opt(2);
 P_max = -P_max;
-
 
 %% result1
 fprintf('\n===================== 遗传算法优化结果 =====================\n');
 fprintf('最优阻尼系数 C_opt = %.2f N·s/m\n', C_opt);
+fprintf('最优 alpha = %.4f\n', alpha_opt);
 fprintf('最大平均功率 P_max = %.4f W\n', P_max);
 fprintf('迭代终止原因：%s\n', output.message);
 fprintf('总函数评估次数：%d\n', output.funccount);
+ 
 
 %% result2
 tspan = 0:0.1:200*2*pi/2.2143;
@@ -152,16 +152,17 @@ function dydt=solver(t,y,C)
 
 end
 %% define the J
-function P = calc_P(C)
+function P = calc_P(x)
+    C = x(1);
+    alpha = x(2);
 
     % define some consts
-    omega=2.2143;                           % 稳态圆频率 (rad/s)
-    tspan = 0:0.1:200*2*pi/omega;           % 仿真时间网格 (s)
-    initial_conditions = [0; 0; 0; 0];      % 初始条件
-    start_time = 100*2*pi/omega;            % 积分开始时间 (s)
-    end_time = 200*2*pi/omega;              % 积分结束时间 (s)
-    T = end_time - start_time;              % 积分时间长度 (s)
-    alpha = 0;                              % 功率公式指数
+    omega=2.2143;                           
+    tspan = 0:0.1:200*2*pi/omega;           
+    initial_conditions = [0; 0; 0; 0];      
+    start_time = 100*2*pi/omega;            
+    end_time = 200*2*pi/omega;              
+    T = end_time - start_time;              
 
     % define the ode solver
     options_ode = odeset(...
