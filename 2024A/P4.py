@@ -1,6 +1,5 @@
-import numpy as np
 import math
-from scipy.optimize import brentq,fsolve
+from scipy.optimize import brentq
 
 class dragon():
     def __init__(self,t,v0=1):
@@ -70,6 +69,30 @@ class dragon():
         ldown=(self.p/(4*math.pi))*(down*math.sqrt(down**2+1)+math.log(down+math.sqrt(down**2+1)))
         return lup-ldown
     
+    def e2s(self,lastpoint,circleO,circler,lengths):
+        x1, y1 = lastpoint  
+        xB, yB = circleO                     
+        r2_sq = circler ** 2                 
+        r1_sq = lengths ** 2  
+        
+        A = 2 * (x1 - xB)          
+        B = 2 * (y1 - yB)          
+        C = (xB**2 + yB**2 - r2_sq) - (x1**2 + y1**2 - r1_sq)  
+        intersections = []
+        a = A**2 + B**2
+        b = 2 * (A * C + A * B * y1 - B**2 * x1)
+        c = C**2 + 2 * B * C * y1 + B**2 * (x1**2 + y1**2 - r1_sq)
+        delta=math.sqrt(b**2 - 4 * a * c)
+
+        x2_1 = (-b - delta) / (2 * a)
+        x2_2 = (-b + delta) / (2 * a)
+        y2_1 = (-A * x2_1 - C) / B
+        y2_2 = (-A * x2_2 - C) / B
+        intersections.append((x2_1, y2_1))
+        intersections.append((x2_2, y2_2))
+
+        return intersections
+
     def dragonhead(self,theta0):
         if self.t<=0:
             ls1=self.length1(self.cplace,0)-self.t
@@ -94,7 +117,6 @@ class dragon():
         
         self.solved+=1
 
-
     def solved1(self):
         """need solvedh before, otherwise solvedg dont have `self.thetatable[0]` """
         if self.road[self.solved-1]>=self.CR1+self.CR2+2.908677539354322 or self.road[self.solved-1]<=0:
@@ -114,76 +136,35 @@ class dragon():
             self.posi.append(self.getxy(theta))
 
         elif self.CR1+3.782164337609935<=self.road[self.solved-1]<self.CR1+self.CR2+2.908677539354322:
-
-            x1, y1 = self.posi[self.solved - 1]  
-            xB, yB = self.O2                     
-            r2_sq = self.r2 ** 2                 
-            r1_sq = self.lenh ** 2               
             
-            A = 2 * (x1 - xB)          
-            B = 2 * (y1 - yB)          
-            C = (xB**2 + yB**2 - r2_sq) - (x1**2 + y1**2 - r1_sq)  
-            intersections = []
-            a = A**2 + B**2
-            b = 2 * (A * C + A * B * y1 - B**2 * x1)
-            c = C**2 + 2 * B * C * y1 + B**2 * (x1**2 + y1**2 - r1_sq)
-            delta=math.sqrt(b**2 - 4 * a * c)
-
-            x2_1 = (-b - delta) / (2 * a)
-            x2_2 = (-b + delta) / (2 * a)
-            y2_1 = (-A * x2_1 - C) / B
-            y2_2 = (-A * x2_2 - C) / B
-            intersections.append((x2_1, y2_1))
-            intersections.append((x2_2, y2_2))
-           
             k1 = (self.B[1] - self.A[1]) / (self.B[0] - self.A[0]) if abs(self.B[0] - self.A[0]) > 1e-9 else 0
             b1 = self.A[1] - k1 * self.A[0]
-            for point in intersections:
+            for point in self.e2s(self.posi[self.solved-1],self.O2,self.r2,self.lenh):
                 xer, yer = point
-                if k1 * xer + b1 > yer:
+                dtheta=math.acos(((xer-self.O2[0])*(self.C[0]-self.O2[0])+(yer-self.O2[1])*(self.C[1]-self.O2[1]))/(self.r2**2))
+                if k1 * xer + b1 > yer and self.CR1+self.r2*dtheta<self.road[self.solved-1]:
                     self.posi.append((xer, yer))
+                    self.road.append(self.CR1+self.r2*dtheta)
                     break
-            dtheta=math.acos(((xer-xB)*(self.C[0]-xB)+(yer-yB)*(self.C[1]-yB))/(self.r2**2))
+            
             # print(dtheta*180/math.pi)
-            self.road.append(self.CR1+self.r2*dtheta)
+            
 
         elif 2.980663764159109<=self.road[self.solved-1]<self.CR1+3.782164337609935:
-
-            x1, y1 = self.posi[self.solved - 1]  
-            xB, yB = self.O1                     
-            r2_sq = self.r1** 2                 
-            r1_sq = self.lenh ** 2               
-            
-            A = 2 * (x1 - xB)          
-            B = 2 * (y1 - yB)          
-            C = (xB**2 + yB**2 - r2_sq) - (x1**2 + y1**2 - r1_sq)  
-            intersections = []
-            a = A**2 + B**2
-            b = 2 * (A * C + A * B * y1 - B**2 * x1)
-            c = C**2 + 2 * B * C * y1 + B**2 * (x1**2 + y1**2 - r1_sq)
-            delta=math.sqrt(b**2 - 4 * a * c)
-
-            x2_1 = (-b - delta) / (2 * a)
-            x2_2 = (-b + delta) / (2 * a)
-            y2_1 = (-A * x2_1 - C) / B
-            y2_2 = (-A * x2_2 - C) / B
-            intersections.append((x2_1, y2_1))
-            intersections.append((x2_2, y2_2))
            
             k1 = (self.B[1] - self.A[1]) / (self.B[0] - self.A[0]) if abs(self.B[0] - self.A[0]) > 1e-9 else 0
             b1 = self.A[1] - k1 * self.A[0]
-            for point in intersections:
+            for point in self.e2s(self.posi[self.solved-1],self.O1,self.r1,self.lenh):
                 xer, yer = point
-                if k1 * xer + b1 < yer:
+                dtheta=math.acos(((xer-self.O1[0])*(self.A[0]-self.O1[0])+(yer-self.O1[1])*(self.A[1]-self.O1[1]))/(self.r1**2))
+                if k1 * xer + b1 < yer and self.r1*dtheta<self.road[self.solved-1]:
                     self.posi.append((xer, yer))
+                    self.road.append(self.r1*dtheta)
                     break
-            dtheta=math.acos(((xer-xB)*(self.A[0]-xB)+(yer-yB)*(self.A[1]-yB))/(self.r1**2))
-            # print(dtheta*180/math.pi)
-            self.road.append(self.r1*dtheta)
         
         elif 0< self.road[self.solved-1] < 2.980663764159109:
             x_i,y_i=self.posi[self.solved-1]
-            l_i=math.sqrt(x_i**2+y_i**2)
+            # l_i=math.sqrt(x_i**2+y_i**2)
             theta_i=math.atan2(y_i,x_i)
             k=self.p/(2*math.pi)
             def f2(theta):
@@ -200,5 +181,81 @@ class dragon():
             self.road.append(-self.length1(theta,2*math.pi*self.r0/self.p))
             self.posi.append(self.getxy(theta))
                 
-                   
         self.solved += 1
+    
+    def solvedb(self):
+        """need solved1 before"""
+        if self.road[self.solved-1]>=self.CR1+self.CR2+1.6592128942656572 or self.road[self.solved-1]<0:
+            x_i,y_i=self.posi[self.solved-1]
+            theta_i=2*math.pi*math.sqrt(x_i**2+y_i**2)/self.p
+            def f1(theta):
+                ls=theta_i**2+theta**2-2*theta_i*theta*math.cos(theta-theta_i)
+                rs=(self.lenb*2*math.pi/self.p)**2
+                return ls-rs
+            
+            if self.road[self.solved-1]>=self.CR1+self.CR2+1.6592128942656572:
+                theta=brentq(f1,a=-self.max_theta,b=theta_i,xtol=1e-8)
+                self.road.append(self.CR1+self.CR2+self.length1(theta,2*math.pi*self.r0/self.p))
+            else:
+                theta=brentq(f1,a=theta_i,b=self.max_theta,xtol=1e-8)
+                self.road.append(-self.length1(theta,2*math.pi*self.r0/self.p))
+            self.posi.append(self.getxy(theta))
+
+        elif self.CR1+1.7466813421403566<=self.road[self.solved-1]<self.CR1+self.CR2+1.6592128942656572:
+            k1 = (self.B[1] - self.A[1]) / (self.B[0] - self.A[0]) if abs(self.B[0] - self.A[0]) > 1e-9 else 0
+            b1 = self.A[1] - k1 * self.A[0]
+            for point in self.e2s(self.posi[self.solved-1],self.O2,self.r2,self.lenb):
+                xer, yer = point
+                dtheta=math.acos(((xer-self.O2[0])*(self.C[0]-self.O2[0])+(yer-self.O2[1])*(self.C[1]-self.O2[1]))/(self.r2**2))
+                if k1 * xer + b1 > yer and self.CR1+self.r2*dtheta<self.road[self.solved-1]:
+                    self.posi.append((xer, yer))
+                    self.road.append(self.CR1+self.r2*dtheta)
+                    break
+
+        elif 1.671457827851641<=self.road[self.solved-1]<self.CR1+1.7466813421403566:
+            k1 = (self.B[1] - self.A[1]) / (self.B[0] - self.A[0]) if abs(self.B[0] - self.A[0]) > 1e-9 else 0
+            b1 = self.A[1] - k1 * self.A[0]
+            for point in self.e2s(self.posi[self.solved-1],self.O1,self.r1,self.lenb):
+                xer, yer = point
+                dtheta=math.acos(((xer-self.O1[0])*(self.A[0]-self.O1[0])+(yer-self.O1[1])*(self.A[1]-self.O1[1]))/(self.r1**2))
+                if k1 * xer + b1 < yer and self.r1*dtheta<self.road[self.solved-1]:
+                    self.posi.append((xer, yer))
+                    self.road.append(self.r1*dtheta)
+                    break
+            
+        
+        elif 0<= self.road[self.solved-1] < 1.671457827851641:
+            x_i,y_i=self.posi[self.solved-1]
+            theta_i=math.atan2(y_i,x_i)
+            k=self.p/(2*math.pi)
+            def f2(theta):
+                x_s=k*theta*math.cos(theta)
+                y_s=k*theta*math.sin(theta)
+                k*theta*math.cos(theta)
+                ls=(x_i-x_s)**2+(y_i-y_s)**2
+                rs=self.lenb**2
+                return ls-rs
+
+            theta=brentq(f2,a=(2*math.pi*self.r0/self.p),b=self.max_theta,xtol=1e-8)
+            self.road.append(-self.length1(theta,2*math.pi*self.r0/self.p))
+            self.posi.append(self.getxy(theta))
+        
+        self.solved += 1
+    
+    def solvenb(self):
+        for i in range(self.total_num+1):
+            if self.solved==0:self.solvedh()
+            elif self.solved==1:self.solved1()
+            elif self.solved<=223:self.solvedb()
+
+
+v=[]
+sp=dragon(50.01)
+sp.solvenb()
+road1=sp.road
+sp1=dragon(49.99)
+sp1.solvenb()
+road2=sp1.road
+for i in range(224):
+    v.append((road1[i]-road2[i])/0.02)
+print(f"v[223] = {v[223]:.6f}")
