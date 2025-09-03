@@ -94,25 +94,25 @@ class dragon():
         return intersections
 
     def dragonhead(self,theta0):
-        if self.t<=0:
-            ls1=self.length1(self.cplace,0)-self.t
+        if self.v0*self.t<=0:
+            ls1=self.length1(self.cplace,0)-self.v0*self.t
             rs1=self.length1(theta0,0)
         
-        elif self.t>=self.CR1+self.CR2:
-            ls1=self.length1(self.cplace,0)+self.t-self.CR1-self.CR2
+        elif self.v0*self.t>=self.CR1+self.CR2:
+            ls1=self.length1(self.cplace,0)+self.v0*self.t-self.CR1-self.CR2
             rs1=self.length1(theta0,0)
 
         return ls1-rs1
     
     def solvedh(self):
-        self.road.append(self.t)
+        self.road.append(self.v0*self.t)
 
-        if self.t<=0 or self.t>self.CR1+self.CR2:
+        if self.v0*self.t<=0 or self.v0*self.t>self.CR1+self.CR2:
             theta_0=brentq(self.dragonhead,a=0,
                 b=self.max_theta, xtol=1e-8)
             # self.theta.append(theta_0)
             self.posi.append(self.getxy(theta_0))
-        elif 0<self.t<=self.CR1+self.CR2:
+        elif 0<self.v0*self.t<=self.CR1+self.CR2:
             self.posi.append(self.getxy())
         
         self.solved+=1
@@ -247,15 +247,3 @@ class dragon():
             if self.solved==0:self.solvedh()
             elif self.solved==1:self.solved1()
             elif self.solved<=223:self.solvedb()
-
-
-v=[]
-sp=dragon(50.01)
-sp.solvenb()
-road1=sp.road
-sp1=dragon(49.99)
-sp1.solvenb()
-road2=sp1.road
-for i in range(224):
-    v.append((road1[i]-road2[i])/0.02)
-print(f"v[223] = {v[223]:.6f}")
