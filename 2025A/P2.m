@@ -1,36 +1,36 @@
-function optimize_dt()
-    % 使用MATLAB遗传算法求解器优化(theta, v, t1, t2)以最大化dt值
-    
-    % 定义参数个数和范围
-    nvars = 4;  % 参数数量: theta, v, t1, t2
-    
-    % 参数范围 [theta_min, v_min, t1_min, t2_min; theta_max, v_max, t1_max, t2_max]
-    lb = [0, 70, 0, 0];       % 下界
-    ub = [2*pi, 140, 100, 100]; % 上界
-    
-    % 设置遗传算法选项
-    options = optimoptions('ga', ...
-        'PopulationSize', 100, ...       % 种群大小
-        'MaxGenerations', 100, ...       % 最大迭代代数
-        'MutationRate', 0.1, ...         % 变异率
-        'CrossoverFraction', 0.8, ...    % 交叉率
-        'EliteCount', 10, ...            % 精英个体数量
-        'Display', 'iter', ...           % 显示迭代过程
-        'PlotFcn', @gaplotbestf);        % 绘制最佳适应度曲线
-    
-    % 运行遗传算法
-    [best_params, best_dt] = ga(@(x) -fitness_function(x), nvars, [], [], [], [], lb, ub, [], options);
-    % 注意: 使用负的适应度函数因为ga默认最小化目标函数
-    
-    % 显示优化结果
-    fprintf('\n优化结果:\n');
-    fprintf('最佳参数:\n');
-    fprintf('theta: %.4f 弧度\n', best_params(1));
-    fprintf('v: %.4f\n', best_params(2));
-    fprintf('t1: %.4f\n', best_params(3));
-    fprintf('t2: %.4f\n', best_params(4));
-    fprintf('最大dt值: %.4f\n', -best_dt);  % 还原为正值
-end
+
+% 使用MATLAB遗传算法求解器优化(theta, v, t1, t2)以最大化dt值
+
+% 定义参数个数和范围
+nvars = 4;  % 参数数量: theta, v, t1, t2
+
+% 参数范围 [theta_min, v_min, t1_min, t2_min; theta_max, v_max, t1_max, t2_max]
+lb = [0, 70, 0, 0];       % 下界
+ub = [2*pi, 140, 100, 100]; % 上界
+
+% 设置遗传算法选项
+options = optimoptions('ga', ...
+    'PopulationSize', 100, ...       % 种群大小
+    'MaxGenerations', 100, ...       % 最大迭代代数
+    'MutationRate', 0.1, ...         % 变异率
+    'CrossoverFraction', 0.8, ...    % 交叉率
+    'EliteCount', 10, ...            % 精英个体数量
+    'Display', 'iter', ...           % 显示迭代过程
+    'PlotFcn', @gaplotbestf);        % 绘制最佳适应度曲线
+
+% 运行遗传算法
+[best_params, best_dt] = ga(@(x) -fitness_function(x), nvars, [], [], [], [], lb, ub, [], options);
+% 注意: 使用负的适应度函数因为ga默认最小化目标函数
+
+% 显示优化结果
+fprintf('\n优化结果:\n');
+fprintf('最佳参数:\n');
+fprintf('theta: %.4f 弧度\n', best_params(1));
+fprintf('v: %.4f\n', best_params(2));
+fprintf('t1: %.4f\n', best_params(3));
+fprintf('t2: %.4f\n', best_params(4));
+fprintf('最大dt值: %.4f\n', -best_dt);  % 还原为正值
+
 
 function dt = fitness_function(params)
     % 计算适应度函数，返回dt值
