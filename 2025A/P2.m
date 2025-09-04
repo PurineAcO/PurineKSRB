@@ -2,10 +2,10 @@
 clear; clc; close all;
 
 %% 1. 参数设置
-theta_fixed = 0;          % 固定theta值
-v_fixed = 70.5;           % 固定v值
-t1_range = linspace(0, 5, 50);  % t1在[0,5]取50个点（密度可调整）
-t2_range = linspace(0, 5, 50);  % t2在[0,5]取50个点（密度可调整）
+theta_fixed = pi;          % 固定theta值
+v_fixed =107.7;           % 固定v值
+t1_range = linspace(0, 0.5, 500);  % t1在[0,5]取50个点（密度可调整）
+t2_range = linspace(0, 0.2, 500);  % t2在[0,5]取50个点（密度可调整）
 [X_t1, Y_t2] = meshgrid(t1_range, t2_range);  % 生成t1-t2网格
 Z_dt = zeros(size(X_t1));  % 存储对应的dt值
 
@@ -32,8 +32,6 @@ colorbar;        % 添加颜色条（标注dt值对应颜色）
 xlabel('t1', 'FontSize', 12, 'FontWeight', 'bold');  % x轴（t1）标注
 ylabel('t2', 'FontSize', 12, 'FontWeight', 'bold');  % y轴（t2）标注
 zlabel('dt', 'FontSize', 12, 'FontWeight', 'bold');  % z轴（dt）标注
-title({'固定theta=0、v=70.5时，t1-t2-dt的3D图像'; 't1∈[0,5], t2∈[0,5]'}, ...
-    'FontSize', 14, 'FontWeight', 'bold');  % 标题（分行显示）
 grid on;  % 显示网格
 rotate3d on;  % 启用3D旋转（可拖动图像调整视角）
 
