@@ -1,19 +1,22 @@
 function [best_params, best_value] = optimized_ga()
-    % 优化三个参数：th, t1, t2
-    % 其他参数关系：t4=t6=t2, t3=t1+1, t5=t3+1, v=105
+    % 优化所有参数：th, v, t1, t2, t3, t4, t5, t6
+    % 参数范围：
+    % th: 0~pi/16, v:70~140
+    % t1,t2,t4,t6:0~5, t3:1~7, t5:1~7
     
     % 参数数量及范围
-    nvars = 3;  % th, t1, t2
-    lb = [0; 0; 0];          % 下界：th=0, t1=0, t2=0
-    ub = [pi/8; 3; 3];       % 上界：th=pi/8, t1=3, t2=3
+    nvars = 8;  % th, v, t1, t2, t3, t4, t5, t6
+    lb = [0; 70; 0; 0; 1; 0; 1; 0];    % 下界
+    ub = [pi/16; 140; 5; 5; 7; 5; 7; 5];  % 上界
     
     % 遗传算法选项设置
     options = gaoptimset( ...
         'PopulationSize', 100, ...        % 种群大小
-        'Generations', 20, ...           % 迭代代数
-        'CrossoverFraction', 0.8, ...    % 交叉率
-        'Display', 'iter', ...           % 显示迭代过程
-        'PlotFcn', @gaplotbestf);        % 绘制最佳适应度曲线
+        'Generations', 50, ...            % 迭代代数（增加以提高优化效果）
+        'CrossoverFraction', 0.8, ...     % 交叉率
+        'MutationRate', 0.1, ...          % 变异率
+        'Display', 'iter', ...            % 显示迭代过程
+        'PlotFcn', @gaplotbestf);         % 绘制最佳适应度曲线
     
     % 运行遗传算法
     [best_params, best_value] = ga(@fitness_fun, nvars, [], [], [], [], lb, ub, [], options);
@@ -22,35 +25,34 @@ function [best_params, best_value] = optimized_ga()
     % 显示优化结果
     fprintf('\n===================== 优化结果 =====================\n');
     th = best_params(1);
-    t1 = best_params(2);
-    t2 = best_params(3);
-    t3 = t1 + 1;
-    t4 = t2;
-    t5 = t3 + 1;
-    t6 = t2;
-    v = 105;
+    v = best_params(2);
+    t1 = best_params(3);
+    t2 = best_params(4);
+    t3 = best_params(5);
+    t4 = best_params(6);
+    t5 = best_params(7);
+    t6 = best_params(8);
     
     fprintf('最佳参数：\n');
-    fprintf('  th(弧度)=%6.4f (≈%4.1f°), t1=%6.2f, t2=%6.2f\n', ...
-        th, rad2deg(th), t1, t2);
-    fprintf('  衍生参数：t3=%6.2f, t4=%6.2f, t5=%6.2f, t6=%6.2f, v=%d\n', ...
-        t3, t4, t5, t6, v);
+    fprintf('  th(弧度)=%6.4f (≈%4.1f°), v=%6.2f\n', ...
+        th, rad2deg(th), v);
+    fprintf('  t1=%6.2f, t2=%6.2f, t3=%6.2f, t4=%6.2f\n', ...
+        t1, t2, t3, t4);
+    fprintf('  t5=%6.2f, t6=%6.2f\n', t5, t6);
     fprintf('最佳dt值：%d\n', best_value);
 end
 
 % 适应度函数
 function f = fitness_fun(params)
-    % 提取优化参数
+    % 提取所有优化参数
     th = params(1);
-    t1 = params(2);
-    t2 = params(3);
-    
-    % 根据规则计算其他参数
-    t3 = t1 + 1;
-    t4 = t2;
-    t5 = t3 + 1;
-    t6 = t2;
-    v = 105;  % 固定值
+    v = params(2);
+    t1 = params(3);
+    t2 = params(4);
+    t3 = params(5);
+    t4 = params(6);
+    t5 = params(7);
+    t6 = params(8);
     
     % 计算dt值作为适应度（由于ga是最小化算法，返回其负值）
     f = -dt(th, v, t1, t2, t3, t4, t5, t6);
