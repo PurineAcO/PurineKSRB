@@ -59,9 +59,11 @@ def dt(th, v, t1, t2):
             cntt += 1
             cnttable.append(t)
     
-    if cnttable is not []:return (cntt - 1) * t_step,cnttable[0],cnttable[-1]
+    if cnttable :return (cntt - 1) * t_step,float(cnttable[0]),float(cnttable[-1])
     else:return None
 
 for t1 in np.arange(0, 5, 0.5):
     for t2 in np.arange(0, 5, 0.5):
-        print(t1,t2,dt(0, 1000, t1, t2))
+        if dt(0,70,t1,t2) is not None:
+            x1,x2,x3=dt(0,70,t1,t2)
+            print(t1,t2,x1,x2,x3)
