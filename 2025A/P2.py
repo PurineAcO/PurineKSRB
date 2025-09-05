@@ -51,7 +51,7 @@ def dt(th, v, t1, t2):
     cntt = 0
     t_start = 0
     t_end = 10
-    t_step = 0.001
+    t_step = 0.01
     for t in np.arange(t_start, t_end, t_step):
         
         if solvek(t)[1]:
