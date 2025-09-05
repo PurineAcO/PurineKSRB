@@ -1,67 +1,62 @@
-function [best_params, best_value] = simplified_ga_optimize_dt()
-    % 简化版遗传算法优化dt函数
-    % 特点：移除约束条件，只保留遗传算法核心可视化
+function [best_params, best_value] = optimized_ga()
+    % 优化三个参数：th, t1, t2
+    % 其他参数关系：t4=t6=t2, t3=t1+1, t5=t3+1, v=105
     
-    % ===================== 1. 初始化参数 =====================
-    nvars = 8;  % th(弧度), v, t1, t2, t3, t4, t5, t6
-    % 参数范围 (lb:下界, ub:上界)
-    lb = [0; 70; 0; 0; 1; 0; 2; 0];    
-    ub = [pi/8; 90; 10; 5; 10; 5; 10; 5];     
+    % 参数数量及范围
+    nvars = 3;  % th, t1, t2
+    lb = [0; 0; 0];          % 下界：th=0, t1=0, t2=0
+    ub = [pi/8; 3; 3];       % 上界：th=pi/8, t1=3, t2=3
     
-    % ===================== 2. 遗传算法选项（精简可视化） =====================
+    % 遗传算法选项设置
     options = gaoptimset( ...
-        'PopulationSize', 75, ...          % 种群大小
-        'Generations', 20, ...             % 迭代代数
-        'CrossoverFraction', 0.8, ...      % 交叉率
-        'Display', 'iter', ...             % 显示迭代过程
-        'PlotFcn', @gaplotbestf, ...       % 遗传算法自带：最佳适应度曲线
-        'OutputFcns', @ga_output_fcn);     % 自定义：每代信息输出
+        'PopulationSize', 100, ...        % 种群大小
+        'Generations', 20, ...           % 迭代代数
+        'CrossoverFraction', 0.8, ...    % 交叉率
+        'Display', 'iter', ...           % 显示迭代过程
+        'PlotFcn', @gaplotbestf);        % 绘制最佳适应度曲线
     
-    % ===================== 3. 运行遗传算法 =====================
+    % 运行遗传算法
     [best_params, best_value] = ga(@fitness_fun, nvars, [], [], [], [], lb, ub, [], options);
-    best_value = -best_value;  % 还原为原dt值（因适应度函数返回的是-dt）
+    best_value = -best_value;  % 还原为原dt值
     
-    % ===================== 4. 输出最终结果 =====================
+    % 显示优化结果
     fprintf('\n===================== 优化结果 =====================\n');
+    th = best_params(1);
+    t1 = best_params(2);
+    t2 = best_params(3);
+    t3 = t1 + 1;
+    t4 = t2;
+    t5 = t3 + 1;
+    t6 = t2;
+    v = 105;
+    
     fprintf('最佳参数：\n');
-    fprintf('  th(弧度)=%6.4f (≈%4.1f°), v=%6.2f, t1=%6.2f, t2=%6.2f\n', ...
-        best_params(1), rad2deg(best_params(1)), best_params(2), best_params(3), best_params(4));
-    fprintf('  t3=%6.2f, t4=%6.2f, t5=%6.2f, t6=%6.2f\n', ...
-        best_params(5), best_params(6), best_params(7), best_params(8));
-    fprintf('最佳dt值（满足条件的时间点数）：%d\n', best_value);
+    fprintf('  th(弧度)=%6.4f (≈%4.1f°), t1=%6.2f, t2=%6.2f\n', ...
+        th, rad2deg(th), t1, t2);
+    fprintf('  衍生参数：t3=%6.2f, t4=%6.2f, t5=%6.2f, t6=%6.2f, v=%d\n', ...
+        t3, t4, t5, t6, v);
+    fprintf('最佳dt值：%d\n', best_value);
 end
 
-% -------------------------------------------------------------------------
-% 子函数1：适应度函数（GA默认最小化，故返回-dt）
-% -------------------------------------------------------------------------
+% 适应度函数
 function f = fitness_fun(params)
-    th = params(1); v = params(2); t1 = params(3); t2 = params(4);
-    t3 = params(5); t4 = params(6); t5 = params(7); t6 = params(8);
-    f = -dt(th, v, t1, t2, t3, t4, t5, t6);  % 最小化-f 等价于最大化dt
+    % 提取优化参数
+    th = params(1);
+    t1 = params(2);
+    t2 = params(3);
+    
+    % 根据规则计算其他参数
+    t3 = t1 + 1;
+    t4 = t2;
+    t5 = t3 + 1;
+    t6 = t2;
+    v = 105;  % 固定值
+    
+    % 计算dt值作为适应度（由于ga是最小化算法，返回其负值）
+    f = -dt(th, v, t1, t2, t3, t4, t5, t6);
 end
 
-% -------------------------------------------------------------------------
-% 子函数2：GA每代回调函数（仅输出遗传算法相关信息）
-% -------------------------------------------------------------------------
-function [state, options, flag] = ga_output_fcn(options, state, flag)
-    flag = false;
-    if strcmp(flag, 'iter')  % 每迭代一代触发
-        % 提取当前代最佳参数和适应度
-        current_best_idx = state.Best(end);
-        current_best_fitness = state.Score(current_best_idx);
-        current_best_dt = -current_best_fitness;
-        
-        % 只显示与遗传算法相关的信息
-        fprintf('  第%d代最佳适应度：%6.2f (对应dt值：%d)\n', ...
-            state.Generation, current_best_fitness, current_best_dt);
-    end
-    state = state;
-    options = options;
-end
-
-% -------------------------------------------------------------------------
-% 以下是原有计算函数（保持不变但必要时精简）
-% -------------------------------------------------------------------------
+% 以下是原有函数（保持不变）
 function mesh = create_mesh()
     % 创建网格点（优化版本，预分配内存）
     theta_list = 0:0.1:2*pi - 1e-6;
