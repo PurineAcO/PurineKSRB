@@ -17,7 +17,7 @@ def dt(th, v, t1, t2):
     alpha = 3000 / math.sqrt(101)
     beta = 300 / math.sqrt(101)
     M = (20000 - (t1 + t2) * alpha, 0, 2000 - (t1 + t2) * beta)
-    GRD = (17800 + v * (t1 + t2) * math.cos(th), 
+    GRD = (17800 - v * (t1 + t2) * math.cos(th), 
            v * (t1 + t2) * math.sin(th), 
            1800 - 0.5 * g * t2 * t2)
 
@@ -33,12 +33,12 @@ def dt(th, v, t1, t2):
     # 检测函数
     def solvek(t):
         ifclose = False
-        M1, M2, M3 = (M[0] - alpha * t, 0, M[2] - beta * t)
-        G1, G2, G3 = (GRD[0], 0, GRD[2] - 3 * t)
+        M1, M2, M3 = (M[0] - alpha * t, M[1], M[2] - beta * t)
+        G1, G2, G3 = (GRD[0], GRD[1], GRD[2] - 3 * t)
         for point in mesh:
             P1, P2, P3 = point
             a = (M1 - P1)**2 + (M2 - P2)** 2 + (M3 - P3)**2
-            b = -2 * ((M1 - P1) * (G1 - P1) + (M2 - P2) * (G2 - P2) + (M3 - P3) * (G3 - P3))
+            b = (-2) * ((M1 - P1) * (G1 - P1) + (M2 - P2) * (G2 - P2) + (M3 - P3) * (G3 - P3))
             c = (G1 - P1)** 2 + (G2 - P2)**2 + (G3 - P3)** 2 - 10**2  
             sol = s2e(a, b, c)
             if sol is not None and 0 <= sol[1] <= 1:
@@ -50,11 +50,14 @@ def dt(th, v, t1, t2):
     # 时间遍历
     cntt = 0
     t_start = 0
-    t_end = 60
-    t_step = 0.1
+    t_end = 10
+    t_step = 0.001
     for t in np.arange(t_start, t_end, t_step):
+        
         if solvek(t)[1]:
             cntt += 1
+            print(t)
 
     return (cntt - 1) * t_step
 
+print(dt(3.0158,89.1882,0.177839,0.868367))

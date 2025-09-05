@@ -50,3 +50,4 @@ for t in np.arange(0, 10, 0.01):
     if solvek(t)[1]:
         cntt+=1
 print((cntt-1)*0.01)
+
