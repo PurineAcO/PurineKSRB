@@ -1,93 +1,3 @@
-%% ---------------------- 1. 原逻辑辅助函数（无需修改） ----------------------
-% 目标函数：计算ccnt（最大化目标）
-function count = ccnt(x)
-% x = [v, th, t1, t2, t3, t4, t5, t6]
-v = x(1); th = x(2); t1 = x(3); t2 = x(4); t3 = x(5); t4 = x(6); t5 = x(7); t6 = x(8);
-g = 9.8; alpha = 3000/sqrt(101); beta = 300/sqrt(101);
-t_start = 0; t_end = 20; t_step = 0.01;
-t_values = t_start:t_step:t_end; cnttinf = zeros(1, length(t_values));
-
-for i = 1:length(t_values)
-    t = t_values(i);
-    % 设备1有效时段
-    if t >= t1+t2 && t <= 20+t1+t2
-        [~, flag] = lengther(v, th, 1, t, t1, t2, t3, t4, t5, t6, g, alpha, beta);
-        if flag, cnttinf(i) = 1; end
-    end
-    % 设备2有效时段
-    if t >= t3+t4 && t <= 20+t3+t4
-        [~, flag] = lengther(v, th, 2, t, t1, t2, t3, t4, t5, t6, g, alpha, beta);
-        if flag, cnttinf(i) = 1; end
-    end
-    % 设备3有效时段
-    if t >= t5+t6 && t <= 20+t5+t6
-        [~, flag] = lengther(v, th, 3, t, t1, t2, t3, t4, t5, t6, g, alpha, beta);
-        if flag, cnttinf(i) = 1; end
-    end
-end
-count = sum(cnttinf);
-end
-
-% 点G到直线PM的距离计算+判断
-function [t, flag] = lengther(v, th, num, t, t1, t2, t3, t4, t5, t6, g, alpha, beta)
-P = [0, 200, 0];                  % 固定点P
-M = MissilePlace(t, alpha, beta);  % 导弹位置M
-G = GRDPlace(v, th, num, t, t1, t2, t3, t4, t5, t6, g);  % 地面设备位置G
-
-% 空间点到直线距离公式：|PG × PM| / |PM|
-vector_PM = M - P;
-vector_PG = G - P;
-cross_product = cross(vector_PG, vector_PM);
-distance = norm(cross_product) / norm(vector_PM);
-
-flag = distance < 10;  % 距离<10则满足条件
-end
-
-% 导弹位置计算
-function pos = MissilePlace(t, alpha, beta)
-if 2000 - beta*t >= 0
-    pos = [20000 - alpha*t, 0, 2000 - beta*t];
-else
-    pos = [0, 0, 0];  % 导弹落地后位置（原逻辑不变）
-end
-end
-
-% 地面设备位置计算
-function pos = GRDPlace(v, th, num, t, t1, t2, t3, t4, t5, t6, g)
-switch num
-    case 1
-        if t < t1
-            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800];
-        elseif t < t1+t2
-            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800 - 0.5*g*(t-t1)^2];
-        else
-            pos = [17800 - v*(t1+t2)*cos(th), v*(t1+t2)*sin(th), 1800 - 0.5*g*t2^2 - 3*(t-t1-t2)];
-        end
-    case 2
-        if t < t3
-            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800];
-        elseif t < t3+t4
-            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800 - 0.5*g*(t-t3)^2];
-        else
-            pos = [17800 - v*(t3+t4)*cos(th), v*(t3+t4)*sin(th), 1800 - 0.5*g*t4^2 - 3*(t-t3-t4)];
-        end
-    case 3
-        if t < t5
-            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800];
-        elseif t < t5+t6
-            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800 - 0.5*g*(t-t5)^2];
-        else
-            pos = [17800 - v*(t5+t6)*cos(th), v*(t5+t6)*sin(th), 1800 - 0.5*g*t6^2 - 3*(t-t5-t6)];
-        end
-end
-end
-
-% 辅助：弧度转角度（仅用于结果显示）
-function deg = rad2deg(rad)
-deg = rad * 180 / pi;
-end
-
-
 %% ---------------------- 2. 遗传算法核心逻辑（无工具箱） ----------------------
 clear; clc; close all;
 
@@ -234,6 +144,100 @@ title('遗传算法迭代收敛曲线', 'FontSize', 14, 'FontWeight', 'bold');
 grid on;
 legend('每代最优值', '全局最优值', 'FontSize', 10);
 hold off;
+
+
+
+%% ---------------------- 1. 原逻辑辅助函数（无需修改） ----------------------
+% 目标函数：计算ccnt（最大化目标）
+function count = ccnt(x)
+% x = [v, th, t1, t2, t3, t4, t5, t6]
+v = x(1); th = x(2); t1 = x(3); t2 = x(4); t3 = x(5); t4 = x(6); t5 = x(7); t6 = x(8);
+g = 9.8; alpha = 3000/sqrt(101); beta = 300/sqrt(101);
+t_start = 0; t_end = 20; t_step = 0.01;
+t_values = t_start:t_step:t_end; cnttinf = zeros(1, length(t_values));
+
+for i = 1:length(t_values)
+    t = t_values(i);
+    % 设备1有效时段
+    if t >= t1+t2 && t <= 20+t1+t2
+        [~, flag] = lengther(v, th, 1, t, t1, t2, t3, t4, t5, t6, g, alpha, beta);
+        if flag, cnttinf(i) = 1; end
+    end
+    % 设备2有效时段
+    if t >= t3+t4 && t <= 20+t3+t4
+        [~, flag] = lengther(v, th, 2, t, t1, t2, t3, t4, t5, t6, g, alpha, beta);
+        if flag, cnttinf(i) = 1; end
+    end
+    % 设备3有效时段
+    if t >= t5+t6 && t <= 20+t5+t6
+        [~, flag] = lengther(v, th, 3, t, t1, t2, t3, t4, t5, t6, g, alpha, beta);
+        if flag, cnttinf(i) = 1; end
+    end
+end
+count = sum(cnttinf);
+end
+
+% 点G到直线PM的距离计算+判断
+function [t, flag] = lengther(v, th, num, t, t1, t2, t3, t4, t5, t6, g, alpha, beta)
+P = [0, 200, 0];                  % 固定点P
+M = MissilePlace(t, alpha, beta);  % 导弹位置M
+G = GRDPlace(v, th, num, t, t1, t2, t3, t4, t5, t6, g);  % 地面设备位置G
+
+% 空间点到直线距离公式：|PG × PM| / |PM|
+vector_PM = M - P;
+vector_PG = G - P;
+cross_product = cross(vector_PG, vector_PM);
+distance = norm(cross_product) / norm(vector_PM);
+
+flag = distance < 10;  % 距离<10则满足条件
+end
+
+% 导弹位置计算
+function pos = MissilePlace(t, alpha, beta)
+if 2000 - beta*t >= 0
+    pos = [20000 - alpha*t, 0, 2000 - beta*t];
+else
+    pos = [0, 0, 0];  % 导弹落地后位置（原逻辑不变）
+end
+end
+
+% 地面设备位置计算
+function pos = GRDPlace(v, th, num, t, t1, t2, t3, t4, t5, t6, g)
+switch num
+    case 1
+        if t < t1
+            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800];
+        elseif t < t1+t2
+            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800 - 0.5*g*(t-t1)^2];
+        else
+            pos = [17800 - v*(t1+t2)*cos(th), v*(t1+t2)*sin(th), 1800 - 0.5*g*t2^2 - 3*(t-t1-t2)];
+        end
+    case 2
+        if t < t3
+            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800];
+        elseif t < t3+t4
+            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800 - 0.5*g*(t-t3)^2];
+        else
+            pos = [17800 - v*(t3+t4)*cos(th), v*(t3+t4)*sin(th), 1800 - 0.5*g*t4^2 - 3*(t-t3-t4)];
+        end
+    case 3
+        if t < t5
+            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800];
+        elseif t < t5+t6
+            pos = [17800 - v*t*cos(th), v*t*sin(th), 1800 - 0.5*g*(t-t5)^2];
+        else
+            pos = [17800 - v*(t5+t6)*cos(th), v*(t5+t6)*sin(th), 1800 - 0.5*g*t6^2 - 3*(t-t5-t6)];
+        end
+end
+end
+
+% 辅助：弧度转角度（仅用于结果显示）
+function deg = rad2deg(rad)
+deg = rad * 180 / pi;
+end
+
+
+
 
 
 %% ---------------------- 3. 辅助函数：判断个体是否满足约束 ----------------------
