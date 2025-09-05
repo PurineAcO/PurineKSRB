@@ -1,5 +1,4 @@
-
-% 主函数：设置优化参数并调用遗传算法
+% 主函数：设置优化参数并调用遗传算法（无约束版本）
 
 % 参数范围设置
 % 变量顺序：th, v, t1, t2, t3, t4, t5, t6
@@ -17,9 +16,9 @@ options = optimoptions('ga', ...
     'Display', 'iter', ...            % 显示迭代过程
     'PlotFcn', @gaplotbestf);         % 绘制最优适应度曲线
 
-% 调用遗传算法进行优化
+% 调用遗传算法进行优化（移除了约束函数）
 [x_opt, fval, exitflag, output] = ga(@(x)fitness_func(x), nVars, ...
-    [], [], [], [], lb, ub, @constraint_func, [], options);
+    [], [], [], [], lb, ub, [], [], options);
 
 % 输出优化结果
 fprintf('\n==================== 优化结果 ====================\n');
@@ -29,6 +28,7 @@ fprintf('  v = %.4f\n', x_opt(2));
 fprintf('  t1 = %.4f, t2 = %.4f\n', x_opt(3), x_opt(4));
 fprintf('  t3 = %.4f, t4 = %.4f\n', x_opt(5), x_opt(6));
 fprintf('  t5 = %.4f, t6 = %.4f\n', x_opt(7), x_opt(8));
+fprintf('  t3-t1 = %.4f, t5-t3 = %.4f\n', x_opt(5)-x_opt(3), x_opt(7)-x_opt(5));
 fprintf('最优目标函数值 (dt)：%.4f\n', fval);
 fprintf('优化收敛标志：%d (1=收敛，0=达到最大代数，-1=失败)\n', exitflag);
 fprintf('总进化代数：%d\n', output.generations);
@@ -36,7 +36,7 @@ fprintf('==================================================\n');
 
 
 function fitness = fitness_func(x)
-    % 适应度函数：计算dt值（直接返回dt作为适应度，因为我们要最小化dt）
+    % 适应度函数：计算dt值
     th = x(1);
     v = x(2);
     t1 = x(3);
@@ -48,21 +48,6 @@ function fitness = fitness_func(x)
     
     % 计算目标函数值
     fitness = -dt(th, v, t1, t2, t3, t4, t5, t6);
-end
-
-function [c, ceq] = constraint_func(x)
-    % 约束函数：定义非线性约束
-    % c <= 0 为不等式约束，ceq = 0 为等式约束
-    t1 = x(3);
-    t3 = x(5);
-    t5 = x(7);
-    
-    % 不等式约束：t3 >= t1 + 1 和 t5 >= t3 + 1（转换为 <= 0 形式）
-    c(1) = t1 + 1 - t3;  % t3 >= t1 + 1 => t1 + 1 - t3 <= 0
-    c(2) = t3 + 1 - t5;  % t5 >= t3 + 1 => t3 + 1 - t5 <= 0
-    
-    % 无等式约束
-    ceq = [];
 end
 
 function mesh = create_mesh()
@@ -219,4 +204,5 @@ function cntt = dt(th, v, t1, t2, t3, t4, t5, t6)
     % 统计满足条件的时间点数量
     cntt = sum(cnttinf >= 1);
 end
+
     
