@@ -1,68 +1,219 @@
-% 主函数：设置优化参数并调用遗传算法
-
-% 参数范围设置
-% 变量顺序：th, v, t1, t2, t3, t4, t5, t6
-nVars = 8;                          % 优化变量数量
-lb = [7*pi/8 + 1e-6, 70, 0, 0, 1, 0, 2, 0];  % 下界（th略大于7π/8避免边界问题）
-ub = [pi - 1e-6, 90, 20, 20, 20, 20, 20, 20];% 上界（th略小于π）
-
-% 遗传算法选项设置
-options = optimoptions('ga', ...
-    'PopulationSize', 50, ...        % 种群大小
-    'MaxGenerations', 15, ...         % 最大进化代数
-    'CrossoverFraction', 0.6, ...     % 交叉概率
-    'MutationFcn', @mutationadaptfeasible, ...  % 自适应变异
-    'ConstraintTolerance', 1e-6, ...  % 约束容差
-    'Display', 'iter', ...            % 显示迭代过程
-    'PlotFcn', @gaplotbestf);         % 绘制最优适应度曲线
-
-% 调用遗传算法进行优化
-[x_opt, fval, exitflag, output] = ga(@(x)fitness_func(x), nVars, ...
-    [], [], [], [], lb, ub, @constraint_func, [], options);
-
-% 输出优化结果
-fprintf('\n==================== 优化结果 ====================\n');
-fprintf('最优参数组合：\n');
-fprintf('  th = %.4f 弧度 (%.2f 度)\n', x_opt(1), rad2deg(x_opt(1)));
-fprintf('  v = %.4f\n', x_opt(2));
-fprintf('  t1 = %.4f, t2 = %.4f\n', x_opt(3), x_opt(4));
-fprintf('  t3 = %.4f, t4 = %.4f\n', x_opt(5), x_opt(6));
-fprintf('  t5 = %.4f, t6 = %.4f\n', x_opt(7), x_opt(8));
-fprintf('最优目标函数值 (dt)：%.4f\n', fval);
-fprintf('优化收敛标志：%d (1=收敛，0=达到最大代数，-1=失败)\n', exitflag);
-fprintf('总进化代数：%d\n', output.generations);
-fprintf('==================================================\n');
-
-
-function fitness = fitness_func(x)
-    % 适应度函数：计算dt值（直接返回dt作为适应度，因为我们要最小化dt）
-    th = x(1);
-    v = x(2);
-    t1 = x(3);
-    t2 = x(4);
-    t3 = x(5);
-    t4 = x(6);
-    t5 = x(7);
-    t6 = x(8);
+function [best_params, best_value] = genetic_algorithm_dt()
+    % 遗传算法参数设置
+    pop_size = 50;         % 种群大小
+    generations = 100;     % 迭代代数
+    mutation_rate = 0.1;   % 变异率
+    crossover_rate = 0.8;  % 交叉率
     
-    % 计算目标函数值
-    fitness = -dt(th, v, t1, t2, t3, t4, t5, t6);
+    % 参数范围设置
+    % th: 角度(弧度), v: 速度, t1-t6: 时间参数
+    param_ranges = [
+        7*pi/8, pi;          % th (0到45度)
+        70, 90;         % v
+        0, 10;            % t1
+        0, 5;             % t2
+        1, 10;            % t3
+        0, 5;             % t4
+        2, 10;            % t5
+        0, 5];            % t6
+    
+    % 初始化种群
+    pop = initialize_population(pop_size, param_ranges);
+    
+    % 约束条件筛选 - 移除不满足条件的个体
+    pop = filter_population(pop);
+    
+    % 如果筛选后种群为空，重新初始化
+    while size(pop, 1) < pop_size/2
+        pop = [pop; initialize_population(pop_size - size(pop, 1), param_ranges)];
+        pop = filter_population(pop);
+    end
+    
+    best_value = -Inf;
+    best_params = [];
+    
+    % 进化循环
+    for gen = 1:generations
+        % 计算适应度 (dt函数值)
+        fitness = zeros(size(pop, 1), 1);
+        for i = 1:size(pop, 1)
+            params = pop(i, :);
+            th = params(1);
+            v = params(2);
+            t1 = params(3);
+            t2 = params(4);
+            t3 = params(5);
+            t4 = params(6);
+            t5 = params(7);
+            t6 = params(8);
+            
+            fitness(i) = dt(th, v, t1, t2, t3, t4, t5, t6);
+        end
+        
+        % 记录最佳个体
+        [current_best, idx] = max(fitness);
+        if current_best > best_value
+            best_value = current_best;
+            best_params = pop(idx, :);
+        end
+        
+        % 显示当前代数的最佳适应度
+        fprintf('Generation %d: Best Fitness = %f\n', gen, current_best);
+        
+        % 选择操作
+        parents = selection(pop, fitness);
+        
+        % 交叉操作
+        offspring = crossover(parents, crossover_rate, param_ranges);
+        
+        % 变异操作
+        offspring = mutation(offspring, mutation_rate, param_ranges);
+        
+        % 合并父代和子代，并筛选
+        pop = [pop; offspring];
+        pop = filter_population(pop);
+        
+        % 保持种群大小
+        if size(pop, 1) > pop_size
+            % 计算新种群的适应度
+            new_fitness = zeros(size(pop, 1), 1);
+            for i = 1:size(pop, 1)
+                params = pop(i, :);
+                new_fitness(i) = dt(params(1), params(2), params(3), params(4), ...
+                                   params(5), params(6), params(7), params(8));
+            end
+            % 选择适应度最高的个体
+            [~, sorted_idx] = sort(new_fitness, 'descend');
+            pop = pop(sorted_idx(1:pop_size), :);
+        end
+    end
+    
+    fprintf('\nOptimization complete.\n');
+    fprintf('Best parameters: th=%f, v=%f, t1=%f, t2=%f, t3=%f, t4=%f, t5=%f, t6=%f\n', best_params);
+    fprintf('Best dt value: %f\n', best_value);
 end
 
-function [c, ceq] = constraint_func(x)
-    % 约束函数：定义非线性约束
-    % c <= 0 为不等式约束，ceq = 0 为等式约束
-    t1 = x(3);
-    t3 = x(5);
-    t5 = x(7);
+function pop = initialize_population(pop_size, param_ranges)
+    % 初始化种群
+    num_params = size(param_ranges, 1);
+    pop = zeros(pop_size, num_params);
     
-    % 不等式约束：t3 >= t1 + 1 和 t5 >= t3 + 1（转换为 <= 0 形式）
-    c(1) = t1 + 1 - t3;  % t3 >= t1 + 1 => t1 + 1 - t3 <= 0
-    c(2) = t3 + 1 - t5;  % t5 >= t3 + 1 => t3 + 1 - t5 <= 0
-    
-    % 无等式约束
-    ceq = [];
+    for i = 1:num_params
+        min_val = param_ranges(i, 1);
+        max_val = param_ranges(i, 2);
+        pop(:, i) = min_val + (max_val - min_val) * rand(pop_size, 1);
+    end
 end
+
+function pop = filter_population(pop)
+    % 筛选种群，移除不满足约束条件的个体
+    % 约束条件：t3-t1 > 1 且 t5-t3 > 1
+    to_keep = [];
+    
+    for i = 1:size(pop, 1)
+        t1 = pop(i, 3);
+        t3 = pop(i, 5);
+        t5 = pop(i, 7);
+        
+        % 检查约束条件
+        if (t3 - t1) > 1 && (t5 - t3) > 1
+            to_keep = [to_keep, i];
+        end
+    end
+    
+    if isempty(to_keep)
+        pop = [];
+    else
+        pop = pop(to_keep, :);
+    end
+end
+
+function parents = selection(pop, fitness)
+    % 轮盘赌选择
+    pop_size = size(pop, 1);
+    parents = zeros(pop_size, size(pop, 2));
+    
+    % 确保适应度非负
+    fitness = fitness - min(fitness) + 1e-6;
+    total_fitness = sum(fitness);
+    prob = fitness / total_fitness;
+    
+    for i = 1:pop_size
+        % 轮盘赌选择一个父代
+        r = rand;
+        cum_prob = 0;
+        for j = 1:pop_size
+            cum_prob = cum_prob + prob(j);
+            if cum_prob >= r
+                parents(i, :) = pop(j, :);
+                break;
+            end
+        end
+    end
+end
+
+function offspring = crossover(parents, crossover_rate, param_ranges)
+    % 单点交叉
+    pop_size = size(parents, 1);
+    num_params = size(parents, 2);
+    offspring = zeros(pop_size, num_params);
+    
+    for i = 1:2:pop_size
+        % 选择两个亲本
+        parent1 = parents(i, :);
+        if i+1 <= pop_size
+            parent2 = parents(i+1, :);
+        else
+            parent2 = parents(1, :);  % 处理奇数情况
+        end
+        
+        % 决定是否进行交叉
+        if rand < crossover_rate
+            % 随机选择交叉点
+            crossover_point = randi([1, num_params-1]);
+            
+            % 生成子代
+            offspring(i, :) = [parent1(1:crossover_point), parent2(crossover_point+1:end)];
+            if i+1 <= pop_size
+                offspring(i+1, :) = [parent2(1:crossover_point), parent1(crossover_point+1:end)];
+            end
+        else
+            % 不交叉，直接复制
+            offspring(i, :) = parent1;
+            if i+1 <= pop_size
+                offspring(i+1, :) = parent2;
+            end
+        end
+    end
+    
+    % 确保参数在范围内
+    for i = 1:num_params
+        min_val = param_ranges(i, 1);
+        max_val = param_ranges(i, 2);
+        offspring(:, i) = max(min(offspring(:, i), max_val), min_val);
+    end
+end
+
+function offspring = mutation(offspring, mutation_rate, param_ranges)
+    % 高斯变异
+    num_params = size(offspring, 2);
+    
+    for i = 1:size(offspring, 1)
+        for j = 1:num_params
+            if rand < mutation_rate
+                % 高斯变异，标准差为参数范围的10%
+                min_val = param_ranges(j, 1);
+                max_val = param_ranges(j, 2);
+                sigma = 0.1 * (max_val - min_val);
+                offspring(i, j) = offspring(i, j) + sigma * randn;
+                
+                % 确保变异后参数仍在范围内
+                offspring(i, j) = max(min(offspring(i, j), max_val), min_val);
+            end
+        end
+    end
+end
+
 
 function mesh = create_mesh()
     % 创建网格点（与Python代码逻辑一致）
