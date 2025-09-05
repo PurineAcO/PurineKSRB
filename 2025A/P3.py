@@ -90,3 +90,4 @@ def dt(th, v, t1, t2,t3,t4,t5,t6):
             cntt+=1
     # print(cnttinf)
     return cntt
+print(dt(2.9829,71.162,0,0,1,0.358,3.635,2.117))

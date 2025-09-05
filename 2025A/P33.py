@@ -94,16 +94,16 @@ def dt(th, v, t1, t2,t3,t4,t5,t6):
 # 模拟退火算法实现
 def simulate_annealing(initial_temp, cooling_rate, num_iterations):
     # 随机生成初始解
-    def generate_initial_solution():
-        v = random.uniform(70, 140)
-        th = random.uniform(7*math.pi/8, math.pi)
-        t1 = random.uniform(0, 20)
-        t2 = random.uniform(0, 20 - t1)
-        t3 = random.uniform(t1 + 1, 20)
-        t4 = random.uniform(0, 20 - t3)
-        t5 = random.uniform(t3 + 1, 20)
-        t6 = random.uniform(0, 20 - t5)
-        return (v, th, t1, t2, t3, t4, t5, t6)
+    def generate_initial_solution():#dt(2.9829,71.162,0,0,1,0.358,3.635,2.117)
+        # v = random.uniform(70, 140)
+        # th = random.uniform(7*math.pi/8, math.pi)
+        # t1 = random.uniform(0, 20)
+        # t2 = random.uniform(0, 20 - t1)
+        # t3 = random.uniform(t1 + 1, 20)
+        # t4 = random.uniform(0, 20 - t3)
+        # t5 = random.uniform(t3 + 1, 20)
+        # t6 = random.uniform(0, 20 - t5)
+        return (71.162,2.9829,0,0,1,0.358,3.635,2.117)
     
     # 生成邻域解
     def generate_neighbor(solution, step_size=0.1):

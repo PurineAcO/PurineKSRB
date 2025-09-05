@@ -1,39 +1,39 @@
-function missile_optimization()
-    % 主函数：设置优化参数并调用遗传算法
-    
-    % 参数范围设置
-    % 变量顺序：th, v, t1, t2, t3, t4, t5, t6
-    nVars = 8;                          % 优化变量数量
-    lb = [7*pi/8 + 1e-6, 70, 0, 0, 0, 0, 0, 0];  % 下界（th略大于7π/8避免边界问题）
-    ub = [pi - 1e-6, 140, 20, 20, 20, 20, 20, 20];% 上界（th略小于π）
-    
-    % 遗传算法选项设置
-    options = optimoptions('ga', ...
-        'PopulationSize', 100, ...        % 种群大小
-        'MaxGenerations', 50, ...         % 最大进化代数
-        'CrossoverFraction', 0.8, ...     % 交叉概率
-        'MutationFcn', @mutationadaptfeasible, ...  % 自适应变异
-        'ConstraintTolerance', 1e-6, ...  % 约束容差
-        'Display', 'iter', ...            % 显示迭代过程
-        'PlotFcn', @gaplotbestf);         % 绘制最优适应度曲线
-    
-    % 调用遗传算法进行优化
-    [x_opt, fval, exitflag, output] = ga(@(x)fitness_func(x), nVars, ...
-        [], [], [], [], lb, ub, @constraint_func, [], options);
-    
-    % 输出优化结果
-    fprintf('\n==================== 优化结果 ====================\n');
-    fprintf('最优参数组合：\n');
-    fprintf('  th = %.4f 弧度 (%.2f 度)\n', x_opt(1), rad2deg(x_opt(1)));
-    fprintf('  v = %.4f\n', x_opt(2));
-    fprintf('  t1 = %.4f, t2 = %.4f\n', x_opt(3), x_opt(4));
-    fprintf('  t3 = %.4f, t4 = %.4f\n', x_opt(5), x_opt(6));
-    fprintf('  t5 = %.4f, t6 = %.4f\n', x_opt(7), x_opt(8));
-    fprintf('最优目标函数值 (dt)：%.4f\n', fval);
-    fprintf('优化收敛标志：%d (1=收敛，0=达到最大代数，-1=失败)\n', exitflag);
-    fprintf('总进化代数：%d\n', output.generations);
-    fprintf('==================================================\n');
-end
+
+% 主函数：设置优化参数并调用遗传算法
+
+% 参数范围设置
+% 变量顺序：th, v, t1, t2, t3, t4, t5, t6
+nVars = 8;                          % 优化变量数量
+lb = [7*pi/8 + 1e-6, 70, 0, 0, 0, 0, 0, 0];  % 下界（th略大于7π/8避免边界问题）
+ub = [pi - 1e-6, 140, 20, 20, 20, 20, 20, 20];% 上界（th略小于π）
+
+% 遗传算法选项设置
+options = optimoptions('ga', ...
+    'PopulationSize', 100, ...        % 种群大小
+    'MaxGenerations', 15, ...         % 最大进化代数
+    'CrossoverFraction', 0.6, ...     % 交叉概率
+    'MutationFcn', @mutationadaptfeasible, ...  % 自适应变异
+    'ConstraintTolerance', 1e-6, ...  % 约束容差
+    'Display', 'iter', ...            % 显示迭代过程
+    'PlotFcn', @gaplotbestf);         % 绘制最优适应度曲线
+
+% 调用遗传算法进行优化
+[x_opt, fval, exitflag, output] = ga(@(x)fitness_func(x), nVars, ...
+    [], [], [], [], lb, ub, @constraint_func, [], options);
+
+% 输出优化结果
+fprintf('\n==================== 优化结果 ====================\n');
+fprintf('最优参数组合：\n');
+fprintf('  th = %.4f 弧度 (%.2f 度)\n', x_opt(1), rad2deg(x_opt(1)));
+fprintf('  v = %.4f\n', x_opt(2));
+fprintf('  t1 = %.4f, t2 = %.4f\n', x_opt(3), x_opt(4));
+fprintf('  t3 = %.4f, t4 = %.4f\n', x_opt(5), x_opt(6));
+fprintf('  t5 = %.4f, t6 = %.4f\n', x_opt(7), x_opt(8));
+fprintf('最优目标函数值 (dt)：%.4f\n', fval);
+fprintf('优化收敛标志：%d (1=收敛，0=达到最大代数，-1=失败)\n', exitflag);
+fprintf('总进化代数：%d\n', output.generations);
+fprintf('==================================================\n');
+
 
 function fitness = fitness_func(x)
     % 适应度函数：计算dt值（直接返回dt作为适应度，因为我们要最小化dt）
@@ -47,7 +47,7 @@ function fitness = fitness_func(x)
     t6 = x(8);
     
     % 计算目标函数值
-    fitness = dt(th, v, t1, t2, t3, t4, t5, t6);
+    fitness = -dt(th, v, t1, t2, t3, t4, t5, t6);
 end
 
 function [c, ceq] = constraint_func(x)
