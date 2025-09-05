@@ -52,12 +52,16 @@ def dt(th, v, t1, t2):
     t_start = 0
     t_end = 10
     t_step = 0.01
+    cnttable=[]
     for t in np.arange(t_start, t_end, t_step):
         
         if solvek(t)[1]:
             cntt += 1
-            print(t)
+            cnttable.append(t)
+    
+    if cnttable is not []:return (cntt - 1) * t_step,cnttable[0],cnttable[-1]
+    else:return None
 
-    return (cntt - 1) * t_step
-
-print(dt(3.0158,89.1882,0.177839,0.868367))
+for t1 in np.arange(0, 5, 0.5):
+    for t2 in np.arange(0, 5, 0.5):
+        print(t1,t2,dt(0, 1000, t1, t2))
