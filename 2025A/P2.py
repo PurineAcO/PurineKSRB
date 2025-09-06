@@ -23,11 +23,11 @@ def dt(th, v, t1, t2):
 
     # 画网格
     mesh = []
-    for theta in np.arange(0, 2 * math.pi, 0.1):
-        for r in np.arange(0, 7, 0.1):
+    for theta in np.arange(0, 2 * math.pi, 0.2*math.pi):
+        for r in np.arange(0, 7, 0.5):
             mesh.append((r * math.cos(theta), 200 + r * math.sin(theta), 10))
-    for theta in np.arange(0, 2 * math.pi, 0.1):
-        for z in np.arange(0, 10, 0.1):
+    for theta in np.arange(0, 2 * math.pi, 0.2*math.pi):
+        for z in np.arange(0, 10, 0.5):
             mesh.append((7 * math.cos(theta), 200 + 7 * math.sin(theta), z))
 
     # 检测函数
@@ -62,8 +62,9 @@ def dt(th, v, t1, t2):
     if cnttable :return (cntt - 1) * t_step,float(cnttable[0]),float(cnttable[-1])
     else:return None
 
-for t1 in np.arange(0, 5, 0.5):
-    for t2 in np.arange(0, 5, 0.5):
-        if dt(0,70,t1,t2) is not None:
-            x1,x2,x3=dt(0,70,t1,t2)
-            print(t1,t2,x1,x2,x3)
+for t1 in np.arange(0, 5, 1):
+    for t2 in np.arange(0, 5, 1):
+        for theta in np.arange(0,10*np.pi/180, np.pi/180):
+            for v in np.arange(70, 140, 10):
+                if dt(theta, v, t1, t2) is not None:
+                    print(dt(theta, v, t1, t2))
