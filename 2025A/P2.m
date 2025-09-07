@@ -1,28 +1,23 @@
-%% 4. 调用GA优化（核心修正：删除gaplotpop + 优化参数范围）
+%% GA优化部分
 clear; clc; close all;
 
-% 4.1 优化参数配置（修正th的上界为π/2，若确需2π可改回，但需说明物理意义）
-nVars = 4;                  % 4个变量：th, v, t1, t2
-lb = [pi-0.1, 70, 0, 0];         % 下界：th=0, v=70, t1=0, t2=0
-ub = [pi+0.1, 100, 1, 1];     % 上界：th=π/2（90度）, v=140, t1=5, t2=5
-intcon = [];                % 无整数变量
+% 优化参数配置
+nVars = 4;                  
+lb = [pi-0.1, 70, 0, 0];         
+ub = [pi+0.1, 100, 1, 1];                   
 
-% 4.2 GA选项设置（核心修正：删除@gaplotpop，仅保留@gaplotbestf）
+% GA设置
 options = optimoptions('ga', ...
-    'PopulationSize', 100, ...    % 种群大小
-    'MaxGenerations', 15, ...    % 最大进化代数
-    'CrossoverFraction', 0.6, ...% 交叉概率
-    'MutationFcn', @mutationadaptfeasible, ...  % 自适应变异
-    'Display', 'iter', ...       % 显示每代迭代信息
-    'PlotFcn', @gaplotbestf);    % 仅绘制“最优适应度曲线”（官方内置函数）
+    'PopulationSize', 100, ...    
+    'MaxGenerations', 15, ...    
+    'CrossoverFraction', 0.6, ...
+    'MutationFcn', @mutationadaptfeasible, ...  
+    'Display', 'iter', ...       
+    'PlotFcn', @gaplotbestf);    
 
-% 4.3 调用GA优化
 [x_opt, fval, exitflag, output] = ga(@ga_fitness, nVars, [], [], [], [], lb, ub, [], intcon, options);
-
-% 4.4 计算最优dt值
 dt_opt = -fval;
 
-% 4.5 输出结果
 fprintf('==================== 遗传算法优化结果 ====================\n');
 fprintf('最优参数组合：\n');
 fprintf('  角度 th = %.4f 弧度 (%.2f 度)\n', x_opt(1), rad2deg(x_opt(1)));
@@ -30,11 +25,9 @@ fprintf('  速度 v = %.4f\n', x_opt(2));
 fprintf('  时间 t1 = %.4f\n', x_opt(3));
 fprintf('  时间 t2 = %.4f\n', x_opt(4));
 fprintf('最优参数对应的dt值：%.4f\n', dt_opt);
-fprintf('优化收敛标志：%d (1=收敛，0=达最大代数，-1=失败)\n', exitflag);
-fprintf('总进化代数：%d\n', output.generations);
-fprintf('==========================================================\n');
 
-%% 1. 定义二次方程求解函数 s2e (对应Python的s2e函数)
+
+%% 原型函数（同supple)
 function sol = s2e(a, b, c)
     if a == 0 || (b^2 - 4*a*c) < 0
         sol = [];  
@@ -47,7 +40,6 @@ function sol = s2e(a, b, c)
 end
 
 
-%% 2. 定义目标函数 dt (对应Python的dt函数)
 function dt_val = dt(th, v, t1, t2)
     g = 9.8;
     alpha = 3000 / sqrt(101);
@@ -76,7 +68,6 @@ function dt_val = dt(th, v, t1, t2)
         end
     end
     
-    % 内部检测函数 solvek
     function [t, ifclose] = solvek(t)
         ifclose = false;
         M_new = [M(1) - alpha*t, 0, M(3) - beta*t];
@@ -102,7 +93,6 @@ function dt_val = dt(th, v, t1, t2)
         end
     end
     
-    % 时间遍历统计
     cntt = 0;
     t_start = 0;
     t_end = 10;
@@ -120,13 +110,12 @@ function dt_val = dt(th, v, t1, t2)
 end
 
 
-%% 3. 遗传算法适应度函数
 function fitness = ga_fitness(x)
-    th = x(1);   % 角度（弧度），修正为[0, π/2]（90度），符合物理场景
-    v = x(2);    % 速度，[70, 140]（按你的需求保留）
-    t1 = x(3);   % 时间1，[0, 5]（按你的需求保留）
-    t2 = x(4);   % 时间2，[0, 5]（按你的需求保留）
+    th = x(1);   
+    v = x(2);    
+    t1 = x(3);  
+    t2 = x(4);  
     
     dt_val = dt(th, v, t1, t2);
-    fitness = -dt_val;  % 最小化dt，故返回负值
+    fitness = -dt_val;  
 end
