@@ -1,4 +1,15 @@
 # Purine KSRB
 
-<img width="248" height="281" alt="image" src="https://github.com/user-attachments/assets/34b36749-9df9-451e-969c-d74a9084f3e9" />
+Update supplements of article in Wechat *Know Spring Rice Bucket*
 
+## The structure of PurineKSRB
+
+-- 2022A  
+-- 2024A  
+-- 2025A  
+-- 豌豆非数注 第二季.md / some comments for *Fishing in the Math Sea* Non-Math 2nd  
+
+## **Updating:**
+
+--热力学与统计力学（林宗涵）答案  
+--理论力学（王琪）答案
