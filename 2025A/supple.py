@@ -3,7 +3,7 @@ import numpy as np
 
 class sol:
     """输入导弹编号和飞机坐标"""
-    def __init(self,num,GRD):
+    def __init__(self,num,GRD):
         self.num = num
         self.GG1,self.GG2,self.GG3=GRD
 
