@@ -8,8 +8,3 @@ Update supplements of article in Wechat *Know Spring Rice Bucket*
 - **2024A**  
 - **2025A**  
 - **豌豆非数注 第二季.md** / some comments for *Fishing in the Math Sea* Non-Math 2nd  
-
-## **Updating:**
-
-- 热力学与统计力学（林宗涵）答案  
-- 理论力学（王琪）答案
