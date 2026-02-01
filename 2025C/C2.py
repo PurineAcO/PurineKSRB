@@ -7,7 +7,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Circle
 
 # ===================== 全局设置 =====================
-plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['font.sans-serif'] = ['Times New Roman']
 plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['figure.dpi'] = 100
 plt.rcParams['savefig.dpi'] = 300
@@ -17,7 +17,7 @@ medal_stats = pd.read_csv("step1_medal_stats_2024.csv", encoding='utf-8')
 pca_input = medal_stats.pivot(
     index='NOC',
     columns='Sport',
-    values='Total_Score'
+    values='Total_Score' 
 ).fillna(0)
 scaler = StandardScaler()
 pca_input_scaled = scaler.fit_transform(pca_input)
@@ -64,7 +64,7 @@ ax.set_ylim(-0.1, n_pcs - 0.9)
 # 设置刻度
 ax.set_xticks(np.arange(n_sports))
 ax.set_yticks(np.arange(n_pcs))
-ax.set_xticklabels(sports, rotation=90, ha='center', fontsize=6)
+ax.set_xticklabels(sports, rotation=90, ha='center', fontsize=8)
 ax.set_yticklabels(pcs, fontsize=9)
 
 # 绘制网格线（更细）
@@ -87,10 +87,10 @@ for i, pc in enumerate(pcs):
 sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, orientation='vertical', aspect=10, shrink=0.65)
-cbar.set_label('载荷值（红色=负贡献，白色=无贡献）', fontsize=9)
+cbar.set_label('Color Bar', fontsize=9)
 
 # 调整布局
-ax.set_title('PCA载荷矩阵可视化（圆点占比最大化版）', fontsize=11, pad=12)
+ax.set_title('The contribution proportion of each sport across the five components', fontsize=11, pad=12)
 plt.tight_layout()
 plt.savefig("step2_pca_loadings_heatmap_max_density.png", dpi=300, bbox_inches='tight')
 plt.show()

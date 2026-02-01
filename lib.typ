@@ -54,8 +54,8 @@
   emph-font: (font.en_serif, font.zh_kai),
   raw-font: (font.en_code, font.zh_hei),
   // 间距设置
-  spacing: 1.5em,
-  leading: 1.0em,
+  spacing: 1.2em,
+  leading: 1em,
   indent: 2em,
   small-space: 1em,
   block-space: 0.75em,
