@@ -58,7 +58,7 @@
   leading: 1em,
   indent: 2em,
   small-space: 1em,
-  block-space: 0.75em,
+  block-space: 0.5em,
   // 颜色设置
   raw-color: rgb("#f0f0f0"),
   problem-color: rgb(241, 241, 255),
