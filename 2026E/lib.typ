@@ -11,8 +11,8 @@
   zh_hei: "SimHei",
   zh_fangsong: "STFangsong",
   // 英文字体
-  en_sans_serif: "New Computer Modern",
-  en_serif: "New Computer Modern",
+  en_sans_serif: "Times New Roman",
+  en_serif: "Times New Roman",
   en_typewriter: "Courier New",
   en_code: "Consolas",
 )
@@ -26,8 +26,8 @@
   n3: 16pt, // 三号
   s3: 15pt, // 小三
   n4: 14pt, // 四号
-  s4: 12pt, // 小四
-  n5: 10.5pt, // 五号
+  s4: 13pt, // 小四
+  n5: 12pt, // 五号
   s5: 9pt, // 小五
 )
 
@@ -181,26 +181,35 @@
 }
 
 #let header-style(heading) = {
+
+
+  if int(counter(page).display())>=3 {
   set text(font: config.header-font)
-  let title = title-state.get()
+  let title = "Team #2618556"
   grid(
     columns: (1fr, 1fr),
     align(left, title), align(right, heading),
   )
+
   v(-1.2em)
-  line(stroke: 1pt + gray, length: 100%)
-}
+  v(0.5em)
+  line(stroke: 1pt + black, length: 100%)
+}}
 
 #let prev-header = context {
-  let headings = query(heading.where(level: 1).before(here()))
-  if headings.len() == 0 {
+  // let headings = query(heading.where(level: 1).before(here()))
+  // if headings.len() == 0 {
+  //   return
+  // }
+  // let level = counter(heading.where(level: 1)).display("1")
+  // if level=="0" {
+  //   return
+  // }
+  // 
+  if(int(counter(page).display()) ==2 ) {
     return
   }
-  let level = counter(heading.where(level: 1)).display("1")
-  if level=="0" {
-    return
-  }
-  let heading = level + h(config.small-space) + headings.last().body
+  let heading = "page " + counter(page).display() + " of " + str(counter(page).final().at(0))
   header-style(heading)
 }
 
@@ -225,17 +234,17 @@
 ) = {
   // 主标题
   align(center)[
-    // #v(5em)
+    #v(4em)
     #block(
       text(
-        font: "Source Han Serif SC",
+        font: "Times New Roman",
         weight: "bold",
         18pt,
         // stretch: 100%,
         title,
       ),
     )
-    #v(0.5em)
+    #v(1.2em)
   ]
 
   // 作者
@@ -259,9 +268,12 @@
 
   // 摘要和关键词
   if abstract != none [
-    #v(2pt)
-    #fake-par
-    *Abstract:* #abstract
+    #set text(size:12.5pt)
+    #set par(spacing: 1.2em)
+    #align(center)[#text(size:16pt)[*Summary*]] 
+    #v(0.5em)
+    #abstract
+    #v(1em)
     
     #if keywords != () [
       *Keywords:* #keywords.join(",")
@@ -289,9 +301,10 @@
 
   // 页面设置
   set page(
-    numbering: "1",
-    number-align: center,
-    header: prev-header,
+    // numbering: "1",
+    // number-align: center,
+    // header: prev-header,
+    // header-ascent
   )
 
   // 基础样式设置
