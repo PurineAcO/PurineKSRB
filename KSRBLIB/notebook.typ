@@ -254,9 +254,9 @@ $ (dif)/(dif t)((partial T)/(partial bold(dot(q)))) - (partial T)/(partial bold(
 
 $ bold(M dot.double(q))+ #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ bold(dot(M)dot(q)) - ((partial T)/(partial bold(q)))^top $]=bold(H f) $<226>
 
-其中
+其中#footnote[原文献中把$bold(0_(3 times 3))$误写成了$bold(0_(3 times 4))$@zhang2021arrestinghal]
 
-$ bold(H)=mat(bold(I_(3 times 3)),bold(0_(3 times 4));bold(0_(4 times 3)),2bold(G^top)) $
+$ bold(H)=mat(bold(I_(3 times 3)),bold(0_(3 times underline(3)));bold(0_(4 times 3)),2bold(G^top)) $
 
 #pagebreak()
 
