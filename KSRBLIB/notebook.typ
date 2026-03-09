@@ -151,7 +151,7 @@ $ bold(T)_(i j)=B_(i)H_(j)-1/2 delta_(i j)bold(B dot H) $<26>
 
 $ bold(F)=integral.triple_Omega nabla dot bold(T) dif V= integral.double_(partial Omega) bold(T) dif S $<27>
 
-运用有限元分析软件模拟@T22 所示线圈#footnote[不加外围的硅钢],得到 @F27 所示的结果#footnote[$s_"TC"$实际上指的是C线圈和T线圈距离的一半.],曲线使用3次样条插值拟合#footnote[这个结果和原论文中提到的结果有较大差异,相差了大约5倍之多,尽管趋势是一致的.我们排除了2D/3D几何对称性对结果产生的影响,尽管2D数值会比3D偏低0.7%,但我们认为3D情形除了会大幅增加计算量以外无任何实际意义.我们在之前还排除了"线圈几何分析"对结果产生的影响#footnote[详见知春饭桶·一则电磁体建模案例]\.为了简化计算,我们将$N$匝线圈的共同作用简化到1匝线圈作用,影响仅为1%,亦不显著.综上,我们有理由认为原文献@Ruan_2023_ElectromagneticDocking\的结果不是准确的,或者采用了文中未提及的方法.]:
+运用有限元分析软件模拟@T22 所示线圈#footnote[不加外围的硅钢],得到 @F27 所示的结果#footnote[$s_"TC"$实际上指的是C线圈和T线圈距离的一半.],曲线使用3次样条插值拟合#footnote[这个结果和原论文中提到的结果有较大差异,相差了大约5倍之多,尽管趋势是一致的.我们排除了2D/3D几何对称性对结果产生的影响,尽管2D数值会比3D偏低0.7%,但我们认为3D情形除了会大幅增加计算量以外无任何实际意义.我们在之前还排除了"线圈几何分析"对结果产生的影响#footnote[详见知春饭桶·#link("https://mp.weixin.qq.com/s/krHwPkr5vh6qBFvG-noFVA")[一则电磁体建模案例]]\.为了简化计算,我们将$N$匝线圈的共同作用简化到1匝线圈作用,影响仅为1%,亦不显著.综上,我们有理由认为原文献@Ruan_2023_ElectromagneticDocking\的结果不是准确的,或者采用了文中未提及的方法.]:
 
 #figure(image("assets/untitled.png",width:100%),caption: [@T22 裸线圈有限元仿真结果])<F27>
 
@@ -161,7 +161,7 @@ $ bold(F)=integral.triple_Omega nabla dot bold(T) dif V= integral.double_(partia
 
 对于C线圈上的位于$bold(a_C)$的某一个电流元$i_C dif bold(l_C)$,其感受到来自于T线圈位于$a_T$上的电流元$i_T dif bold(l_T)$的磁感应强度为:
 
-$ bold(B_T)=(mu_0 i_T)/(4 pi) dot (bold(h_"TC") times dif bold(l_T))/(h_"TC"^3) $<28>
+$ dif bold(B_T)=(mu_0 i_T)/(4 pi) dot (bold(h_"TC") times dif bold(l_T))/(h_"TC"^3) $<28>
 
 进一步,积分得到该部分感受到的力和力矩为:
 
@@ -192,7 +192,7 @@ $ bold(A)=(mu_0 i_T)/(4 pi) integral.cont_T (dif bold(l_T))/(||bold(h_"TC")||)  
 
 根据矢量恒等式@214,得到:
 
-$ bold(A) =& (mu_0 i_T)/(4 pi) integral.cont_T (dif bold(l_T))/(||bold(h_"TC")||) =  (mu_0 i_T)/(4 pi) integral.double dif bold(S) times nabla (1/(||bold(h_"TC")||)) \ = & (mu_0)/(4 pi) bold(m) times (bold(h_"TC"))/(h_"TC"^3) approx (mu_0)/(4 pi) bold(m) times (bold(s_"TC"))/(s_"TC"^3) $<215>
+$ bold(A) =& (mu_0 i_T)/(4 pi) integral.cont (dif bold(l_T))/(||bold(h_"TC")||) =  (mu_0 i_T)/(4 pi) integral.double dif bold(S) times nabla (1/(||bold(h_"TC")||)) \ = & (mu_0)/(4 pi) bold(m) times (bold(h_"TC"))/(h_"TC"^3) approx (mu_0)/(4 pi) bold(m) times (bold(s_"TC"))/(s_"TC"^3) $<215>
 
 上面等式成立的条件是$||bold(s_"TC")|| gt.double ||bold(a_"T")||$,即观察点处在足够远的地方,进一步得到:
 
@@ -205,6 +205,8 @@ $ bold(F)= (3 mu_0)/(4 pi)[((bold(m_T dot m_C))/(s_"TC"^5) - (5(bold(m_T dot s_"
 以及电磁力矩:
 
 $ bold(tau) = (mu_0)/(4 pi) bold(m_C) times ((3(bold(m_T) dot bold(s_"TC")) bold(s_"TC"))/(s_"TC"^5) - (bold(m_T))/s_"TC"^3) $<218>
+
+== 含有永磁体的建模方法
 
 == 运动与时域推进
 
