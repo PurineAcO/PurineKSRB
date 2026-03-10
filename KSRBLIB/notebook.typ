@@ -59,25 +59,15 @@
 #pagebreak()
 = 电磁对接装置拓扑及控制策略研究@Ruan_2023_ElectromagneticDocking
 
-本篇将主要介绍该文献的*复现方案*.
+本篇是本人承担的由他人主导的某个用于参加无意义比赛的课题的理论部分的总结.事实上,我一点都没有看出来这个项目具有任何能够成功的潜质.之所以留在了《年鉴》中,完全是由于这种做法可能形成一种建立复杂动力学控制模型的范式.
 
 == 电磁拓扑结构
 
-
-
-#figure(image("assets/image.png",width: 60%),caption: [六自由度电磁对接装置模型])
-
-整个装置由16个线圈组成,为了简化控制过程,人为将对接过程转换为3个解耦的部分:
-
-第一部分是当两星距离较远时,利用C0和T0的相互作用,使之*接近*,称之为*A阶段*;
-
-第二部分是当两星距离较近时,利用C7\~10线圈和T0的相互作用,使之*在接近线路上对齐*、利用C1\~6和T0的相互作用,使之*在接近姿态上对齐*,这两部分合称*B阶段*;
-
-第三部分是当两星距离非常近时,利用C1\~6线圈和T1\~4的相互作用,*消除在滚转上的误差*,并最终实现对接,称之为*C阶段*.
+(本来此处有一个描述,不过负责人放弃了这种想法,故删除.)
 
 === 基于欧拉角的随体坐标系定义
 
-#figure(image("assets/image-1.png",width: 40%),caption: [随体坐标系定义])
+#figure(image("assets/image-1.png",width: 45%),caption: [随体坐标系定义])
 
 定义两星的随体坐标系中$X$轴指向外侧,$Y$轴均指向各自1号线圈方向,其余按照右手定则取定.根据地面绝对坐标系定义两星的欧拉角为$(phi_T,theta_T,psi_T)^top$和$(phi_C,theta_C,psi_C)^top$.
 
@@ -107,11 +97,11 @@ $ q=w+x bold(i) + y bold(j) +z bold(k) $
 
 我们考虑下面这个实物模型:
 
-#figure(image("assets/image-2.png",width: 80%),caption: [机械辅助导向式电磁对接装置])
+#figure(image("assets/image-2.png",width: 100%),caption: [机械辅助导向式电磁对接装置])
 
 将其进行简化:
 
-#figure(image("assets/image-3.png",width: 90%),caption: [电磁线圈构型与尺寸标记])
+#figure(image("assets/image-3.png",width: 100%),caption: [电磁线圈构型与尺寸标记])
 
 该部分电磁线圈的构型和尺寸以及重要电磁参数如下所示:
 
@@ -175,10 +165,9 @@ $ bold(F_C)=(n_C n_T i_C i_T mu_0)/(4 pi) dot integral.cont_C  (integral.cont_T 
 
 $ bold(tau_C)=(n_C n_T i_C i_T mu_0)/(4 pi) dot integral.cont_C bold(a_C) times ((integral.cont_T (bold(h_"TC") times dif bold(l_T))/(h_"TC"^3)) times dif bold(l_C)) $<212>
 
-=== 远场近似#footnote[因$norm(bold(s_"TC")) < 4 norm(bold(a_"T"))$,导致模型的误差过大,本案例不适用.可以考虑将@215 进一步进行Taylor展开,得到中近场的近似模型,此情况下计算量增加过大,难以为控制律运用.] <C2231>
+=== 远场近似  <C2231>
 
-
-下面考虑Stokes定理,其中$bold(c)$是常矢量,$phi$是一个标量场:
+考虑当线圈距离足够远的情形#footnote[因$norm(bold(s_"TC")) < 4 norm(bold(a_"T"))$,导致模型的误差过大,本案例不适用.可以考虑将@215 进一步进行Taylor展开,得到中近场的近似模型,此情况下计算量增加过大,难以为控制律运用.]:下面考虑Stokes定理,其中$bold(c)$是常矢量,$phi$是一个标量场:
 
 $ #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ bold(c) dot integral.cont phi dif bold(l) $] = integral.cont phi bold(c) dif bold(l) = integral.double nabla times (phi bold(c)) dif bold(S)   = integral.double nabla phi times  bold(c) dot dif bold(S) = integral.double dif bold(S) times nabla phi dot bold(c) = #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ bold(c) dot integral.double dif bold(S) times nabla phi $] $
 
@@ -202,11 +191,17 @@ $ bold(B) = nabla times bold(A) = (mu_0)/(4 pi)((3(bold(m) dot bold(s)) bold(s))
 
 $ bold(F)= (3 mu_0)/(4 pi)[((bold(m_T dot m_C))/(s_"TC"^5) - (5(bold(m_T dot s_"TC"))(bold(m_C dot s_"TC")))/(s_"TC"^7))bold(s_"TC") + (bold(m_T dot s_"TC"))/(s_"TC"^5) bold(m_C) + (bold(m_C dot s_"TC"))/(s_"TC"^5) bold(m_T)] $<217>
 
-以及电磁力矩:
+以及电磁力矩#footnote[也可以利用电磁力对作用点在随体坐标系下取力矩加以实现,此种方法显然是更加偏向于场的观念,个人认为这不是完全必要的,尤其是在接续的六自由度分析中.]:
 
 $ bold(tau) = (mu_0)/(4 pi) bold(m_C) times ((3(bold(m_T) dot bold(s_"TC")) bold(s_"TC"))/(s_"TC"^5) - (bold(m_T))/s_"TC"^3) $<218>
 
-== 含有永磁体的建模方法
+=== 含有永磁铁的静磁场求解
+
+对于稀土磁铁,在其工作点附近,大致满足以下关系#footnote[作者根本不知道,承担此项任务的负责人到底在想什么,事实上,*使用仿真软件进行磁力的计算是不合适的,为此应当采取更为准确的实验标定方法.*在实际使用COMSOL进行仿真的时候,难以得到完全合乎物理原则的结果,甚至难以逻辑自洽,这令人不得不怀疑历史上从事类似所有实验并声称使用有限元方法的人的居心了!]:
+
+$ bold(B) = mu_0 mu_"rec"bold(H) + bold(B_r) $<219>
+
+其中,$bold(B_r)$被称为剩余磁通密度,$mu_"rec"$称为回复磁导率.
 
 == 运动与时域推进
 

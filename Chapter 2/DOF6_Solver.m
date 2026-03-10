@@ -1,9 +1,8 @@
 clear; clc; close all;
-
 %% 1. define consts
 
 % the initial state vector (position, velocity, euler angles, angular velocity)
-x0 = reshape([0,0,0,  0,0,0,  0,0,0,  0,0,0], 1, 12);  
+x0 = reshape([0.1,0,0,  0,0,0,  0,0,0,  0,0,0], 1, 12);  
 
 % the simulation time interval
 t_span = [0, 8];  
@@ -11,7 +10,7 @@ t_span = [0, 8];
 %% 2. ode45 solver
 
 % if you want the 'OutFcn', you should define the state function.
-options = odeset('RelTol',1e-6,'AbsTol',1e-9); 
+options = odeset('RelTol',1e-6,'AbsTol',1e-9,'Events',@when0); 
 [t, x] = ode45(@rigidBody6DOF, t_span, x0, options);
 
 %% 3. extract the results
@@ -32,7 +31,7 @@ subplot(3,2,6);plot(t,sqrt(sum(omega_hist.^2,2)));xlabel('t/s');ylabel('角速�
 function dxdt = rigidBody6DOF(~, x)
 
     % 0.0 get the infomation of the rigid body
-    infom = MIF();
+    infom = MIF(x);
     m = infom.m;
     I_body = infom.I_body;
     r_body = infom.r_body;
@@ -84,14 +83,23 @@ function dxdt = rigidBody6DOF(~, x)
     dxdt = reshape(dxdt_row,12,1);
 end
 
-%% a. calculate the mass/inertia matrix/force change with t
+%% a. calculate the mass/inertia matrix/force change with t or x
 
-function info = MIF()
+function info = MIF(x)
 
-    info.m = 2;                            % mass of rigid body (kg)
-    info.I_body = diag([1,1,1]);           % the inertia matrix of the rigid body (3×3 matrix)
+    info.m = 100;                                           % mass of rigid body (kg)
+    info.I_body = diag([1,1,1]);                            % the inertia matrix of the rigid body 
 
-    info.r_body = reshape([1,1,1],1,3);    % the position vector of the force point relative to RIGID BODY
-    info.F_abs = reshape([1,0,0],1,3);     % the force vector acting on the rigid body relative to GROUND (1×3 row vector)
+    info.r_body = reshape([1,0,0],1,3);                     % the position vector of the force point relative to RIGID BODY
+    info.F_abs = reshape([-magi_solver(x(1)),0,0],1,3);     % the force vector acting on the rigid body relative to GROUND 
 
+end
+
+%% b. define the event function
+% if x/y/z is zero, then the event function is triggered and the solver is stopped
+
+function [value,isterminal,direction] = when0(~,x)
+    value = [abs(x(1))-1e-4, abs(x(2))-1e-4, abs(x(3))-1e-4];
+    isterminal = [1,1,1];
+    direction = [0,0,0];
 end
