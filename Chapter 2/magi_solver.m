@@ -1,45 +1,99 @@
-function F = mag_force(x_m)
+clear; clc; close all;
 
-    x = x_m*500;
+%% 0. Define constants
+Br = 1;                       % Residual magnetic flux density (T)
+mu_r = 1;                     % Relative permeability
+mu_0 = 4*pi*1e-7;             % Permeability of free space
 
-    if x<0
-        F = 0;
+before = (Br^2)*(mu_r+3)^2/((4*pi*mu_0)*(mu_r+1)^4);
 
-    elseif x >= 0 && x < 20
-        F = 37.23;  
-   
-    elseif x >= 20 && x < 25
-        dx = x - 20;
-        F = -0.000804 * dx^3 + 0.076152 * dx^2 - 2.576654 * dx + 37.23;
+mag_shape_a = [1,1,1];        % Volume parameters [L, W, H]
+mag_shape_b = [1,1,1];        % Volume parameters [L, W, H]
 
-    elseif x >= 25 && x < 35
-        dx = x - 25;
-        F = -0.000804 * dx^3 + 0.064088 * dx^2 - 1.875453 * dx + 26.15;
-   
-    elseif x >= 35 && x < 40
-        dx = x - 35;
-        F = -0.001793 * dx^3 + 0.039960 * dx^2 - 0.834974 * dx + 13.00;
-   
-    elseif x >= 40 && x < 65
-        dx = x - 40;
-        F = -0.000097 * dx^3 + 0.013065 * dx^2 - 0.569851 * dx + 9.60;
-   
-    elseif x >= 65 && x < 75
-        dx = x - 65;
-        F = -0.000138 * dx^3 + 0.005772 * dx^2 - 0.098919 * dx + 2.00;
-    
-    elseif x >= 75 && x <= 95
-        dx = x - 75;
-        F = -0.000138 * dx^3 + 0.001631 * dx^2 - 0.024888 * dx + 1.45;
-    
-    elseif x > 95
-        dx_95 = 95 - 75;
-        F_95 = -0.000138 * dx_95^3 + 0.001631 * dx_95^2 - 0.024888 * dx_95 + 1.45;
-        F = F_95;
+mag_place_a = [0,0,0];        % Centroid position [x, y, z]
+mag_place_b = [3,3,3];        % Centroid position [x, y, z]
 
-    else
-        F=0;
-        
-    end
+% mag_euler_a = [0,0,0];      % Euler angles (attitude) of magnet A
+% mag_euler_b = [0,0,0];      % Euler angles (attitude) of magnet B
+
+step = 0.1;                   % Mesh density
+
+%% 1. Generate surface mesh - CELL CENTROIDS (grid center points)
+
+% Generate Grid of A
+x_A = mag_place_a(1)-mag_shape_a(1)/2+step/2 : step : mag_place_a(1)+mag_shape_a(1)/2-step/2;
+y_A = mag_place_a(2)-mag_shape_a(2)/2+step/2 : step : mag_place_a(2)+mag_shape_a(2)/2-step/2;
+[X_AF, Y_AF] = meshgrid(x_A, y_A);
+
+Zc_bottom_A = zeros(size(X_AF)) + mag_place_a(3) - mag_shape_a(3)/2;
+Zc_top_A = Zc_bottom_A + mag_shape_a(3);
+
+mesh_A_top = [X_AF(:), Y_AF(:), Zc_top_A(:)];
+mesh_A_bottom = [X_AF(:), Y_AF(:), Zc_bottom_A(:)];
+
+% Generate Grid of B
+x_B = mag_place_b(1)-mag_shape_b(1)/2+step/2 : step : mag_place_b(1)+mag_shape_b(1)/2-step/2;
+y_B = mag_place_b(2)-mag_shape_b(2)/2+step/2 : step : mag_place_b(2)+mag_shape_b(2)/2-step/2;
+[X_BF, Y_BF] = meshgrid(x_B, y_B);
+
+Zc_bottom_B = zeros(size(X_BF)) + mag_place_b(3) - mag_shape_b(3)/2;
+Zc_top_B = Zc_bottom_B + mag_shape_b(3);
+
+mesh_B_top = [X_BF(:), Y_BF(:), Zc_top_B(:)];
+mesh_B_bottom = [X_BF(:), Y_BF(:), Zc_bottom_B(:)];
+
+%% 2. Calculate the force and torque between A and B
+
+dS = step*step;
+
+function [total_Fx, total_Fy, total_Fz,total_Mx, total_My, total_Mz]=CFT(mesh1,mesh2,center1,params)
+
+    % which is used to calculate the force between two meshes,params is a vector which contains
+    % the sign of the force,the square of the mesh,and the 'before' constant
+    % this function calculate the force and torque which mesh1 feels.
+    dx = mesh1(:,1) - mesh2(:,1)';
+    dy = mesh1(:,2) - mesh2(:,2)';
+    dz = mesh1(:,3) - mesh2(:,3)';
+    r = sqrt(dx.^2 + dy.^2 + dz.^2);
+
+    Fx = params(1)*params(2)*params(3).*dx./r.^3;
+    Fy = params(1)*params(2)*params(3).*dy./r.^3;
+    Fz = params(1)*params(2)*params(3).*dz./r.^3;
+
+    total_Fx = sum(Fx(:));
+    total_Fy = sum(Fy(:));
+    total_Fz = sum(Fz(:));
+
+    arm_x = mesh1(:,1) - center1(1);
+    arm_y = mesh1(:,2) - center1(2);
+    arm_z = mesh1(:,3) - center1(3);
+
+    arm_x = arm_x(:, ones(1, size(mesh2,1)));
+    arm_y = arm_y(:, ones(1, size(mesh2,1)));
+    arm_z = arm_z(:, ones(1, size(mesh2,1)));
+
+    Mx = arm_y.*Fz - arm_z.*Fy;
+    My = arm_z.*Fx - arm_x.*Fz;
+    Mz = arm_x.*Fy - arm_y.*Fx;
+
+    total_Mx = sum(Mx(:));
+    total_My = sum(My(:));
+    total_Mz = sum(Mz(:));
+
 end
 
+total_FT = zeros(1,6);
+
+[Fx,Fy,Fz,Mx,My,Mz] = CFT(mesh_A_top,mesh_B_bottom,mag_place_a,[1,dS,before]);
+total_FT = total_FT + [Fx,Fy,Fz,Mx,My,Mz];
+
+[Fx,Fy,Fz,Mx,My,Mz] = CFT(mesh_A_bottom,mesh_B_top,mag_place_a,[1,dS,before]);
+total_FT = total_FT + [Fx,Fy,Fz,Mx,My,Mz];
+
+[Fx,Fy,Fz,Mx,My,Mz] = CFT(mesh_A_top,mesh_B_top,mag_place_a,[-1,dS,before]);
+total_FT = total_FT + [Fx,Fy,Fz,Mx,My,Mz];
+
+[Fx,Fy,Fz,Mx,My,Mz] = CFT(mesh_A_bottom,mesh_B_bottom,mag_place_a,[-1,dS,before]);
+total_FT = total_FT + [Fx,Fy,Fz,Mx,My,Mz];
+
+disp(total_FT);

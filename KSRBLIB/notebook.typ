@@ -245,6 +245,12 @@ $ sigma_m = (bold(B_r) (mu_r^2+3))/(mu_0 (mu_r+1)^2) $<219-8>
 
 $ bold(F) = mu_0/(4 pi) sum_j sum_k (sigma_m (bold(x_j)) sigma_m (bold(x_k))(bold(x_j-x_k)))/(bold(norm(x_j-x_k))^3) Delta A_j Delta A_k $<219-9>
 
+进一步代入@219-8 得到:
+
+$ bold(F) = plus.minus (B_r^2 (mu_r+3)^2)/(4 pi mu_0 (mu_r+1)^4) sum_j sum_k (bold(x_j-x_k))/(norm(bold(x_j-x_k))^3) Delta A_j Delta A_k $<219-10> 
+
+正负号需要根据南北极进行手动确认.
+
 - *对双圆柱体的离散化求解*
 
 
