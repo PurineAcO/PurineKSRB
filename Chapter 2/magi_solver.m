@@ -1,6 +1,8 @@
 clear; clc; close all;
 
 %% 0. Define constants
+
+% All the parameters are defined in the SI unit.
 Br = 1;                       % Residual magnetic flux density (T)
 mu_r = 1;                     % Relative permeability
 mu_0 = 4*pi*1e-7;             % Permeability of free space
@@ -20,27 +22,30 @@ step = 0.1;                   % Mesh density
 
 %% 1. Generate surface mesh - CELL CENTROIDS (grid center points)
 
-% Generate Grid of A
-x_A = mag_place_a(1)-mag_shape_a(1)/2+step/2 : step : mag_place_a(1)+mag_shape_a(1)/2-step/2;
-y_A = mag_place_a(2)-mag_shape_a(2)/2+step/2 : step : mag_place_a(2)+mag_shape_a(2)/2-step/2;
-[X_AF, Y_AF] = meshgrid(x_A, y_A);
+function mesh=mesher(shape,place,step,bt)
+    % this function is used to generate the mesh of a cube
+    % shape is a vector which contains the length,width and height of the cube
+    % place is a vector which contains the centroid position of the cube
+    % step is the mesh density
+    % bt is a string which is used to determine whether the mesh is top or bottom
 
-Zc_bottom_A = zeros(size(X_AF)) + mag_place_a(3) - mag_shape_a(3)/2;
-Zc_top_A = Zc_bottom_A + mag_shape_a(3);
+    x = place(1)-shape(1)/2+step/2 : step : place(1)+shape(1)/2-step/2;
+    y = place(2)-shape(2)/2+step/2 : step : place(2)+shape(2)/2-step/2;
+    [X, Y] = meshgrid(x, y);
 
-mesh_A_top = [X_AF(:), Y_AF(:), Zc_top_A(:)];
-mesh_A_bottom = [X_AF(:), Y_AF(:), Zc_bottom_A(:)];
+    if strcmp(bt,'top')
+        Z = zeros(size(X)) + place(3) + shape(3)/2;
+    elseif strcmp(bt,'bottom')
+        Z = zeros(size(X)) + place(3) - shape(3)/2;
+    end
+    mesh = [X(:), Y(:), Z(:)];
 
-% Generate Grid of B
-x_B = mag_place_b(1)-mag_shape_b(1)/2+step/2 : step : mag_place_b(1)+mag_shape_b(1)/2-step/2;
-y_B = mag_place_b(2)-mag_shape_b(2)/2+step/2 : step : mag_place_b(2)+mag_shape_b(2)/2-step/2;
-[X_BF, Y_BF] = meshgrid(x_B, y_B);
+end
 
-Zc_bottom_B = zeros(size(X_BF)) + mag_place_b(3) - mag_shape_b(3)/2;
-Zc_top_B = Zc_bottom_B + mag_shape_b(3);
-
-mesh_B_top = [X_BF(:), Y_BF(:), Zc_top_B(:)];
-mesh_B_bottom = [X_BF(:), Y_BF(:), Zc_bottom_B(:)];
+mesh_A_top = mesher(mag_shape_a,mag_place_a,step,'top');
+mesh_A_bottom = mesher(mag_shape_a,mag_place_a,step,'bottom');
+mesh_B_top = mesher(mag_shape_b,mag_place_b,step,'top');
+mesh_B_bottom = mesher(mag_shape_b,mag_place_b,step,'bottom');
 
 %% 2. Calculate the force and torque between A and B
 
@@ -51,6 +56,9 @@ function [total_Fx, total_Fy, total_Fz,total_Mx, total_My, total_Mz]=CFT(mesh1,m
     % which is used to calculate the force between two meshes,params is a vector which contains
     % the sign of the force,the square of the mesh,and the 'before' constant
     % this function calculate the force and torque which mesh1 feels.
+    % if you want the mesh2's force,you need to change the sign of params(1)
+    % if you want the mesh2's torque,you need to change the sign of params(1) and 'center1'
+
     dx = mesh1(:,1) - mesh2(:,1)';
     dy = mesh1(:,2) - mesh2(:,2)';
     dz = mesh1(:,3) - mesh2(:,3)';
