@@ -197,11 +197,57 @@ $ bold(tau) = (mu_0)/(4 pi) bold(m_C) times ((3(bold(m_T) dot bold(s_"TC")) bold
 
 === 含有永磁铁的静磁场求解
 
+- *在COMSOL中定义的静磁场求解格式*
+
 对于稀土磁铁,在其工作点附近,大致满足以下关系#footnote[作者根本不知道,承担此项任务的负责人到底在想什么,事实上,*使用仿真软件进行磁力的计算是不合适的,为此应当采取更为准确的实验标定方法.*在实际使用COMSOL进行仿真的时候,难以得到完全合乎物理原则的结果,甚至难以逻辑自洽,这令人不得不怀疑历史上从事类似所有实验并声称使用有限元方法的人的居心了!]:
 
-$ bold(B) = mu_0 mu_"rec"bold(H) + bold(B_r) $<219>
+$ bold(B) = mu_0 mu_"rec"bold(H) + bold(B_r) = mu_0 (bold(H)+bold(M)) $<219>
 
 其中,$bold(B_r)$被称为剩余磁通密度,$mu_"rec"$称为回复磁导率.
+
+- *基于本构关系的离散化求解方法*
+
+吉林大学的瞿川提出了一种对于特殊形状永磁体的磁力推导手段@qu_chuan_2018_12012119,以基本形状的钕铁硼永磁体为研究对象,基于静磁场分析方法,建立永磁体间磁力和磁刚度#footnote[指的是磁力随位移的变化率,定义为$k=-(dif F)/(dif x)$.]的参数化数学理论模型,阐明磁力和磁刚度的影响因素.结合永磁体参数,分别建立平行和垂直磁化的两个圆柱体永磁体、两个长方体永磁体、圆柱体和长方体永磁体间磁力和磁刚度的数学理论模型,最后阐述磁力和磁刚度数学理论模型的高效求解方法.
+
+在静磁场中存在以下场关系:
+
+$ cases(nabla times bold(H) = 0,nabla dot bold(B) = 0) $<219-1>
+
+引入磁标势#footnote[COMSOL中的说法,文献称"标量势"]$phi_m$
+
+$ bold(H)=-nabla phi_m $<219-2>
+
+结合@219 得到:
+
+$ nabla^2 phi_m = nabla dot bold(M) $<219-3>
+
+假设永磁铁的磁化强度$bold(M)$仅存在于磁体内部,将@219-3 改写为积分形式得到#footnote[这是一个与Green函数有关的积分结果,详见有关方面参考书.]:
+
+$ phi_m = -1/(4 pi) integral.triple_V (nabla dot bold(M(x')))/(norm(bold(x)-bold(x'))) dif V +1/(4 pi) integral.double_(partial V) (bold(M(x')) dot bold(n))/(norm(bold(x-x'))) dif S $<219-4>
+
+其中,$bold(x)$是场中某点,$bold(x')$是场源,$bold(n)$表示的是$partial V$的外法向.结合磁化强度和磁荷密度的关系,得到:
+
+$ phi_m = 1/(4 pi) integral.triple_V (rho_m (bold(x')))/(norm(bold(x)-bold(x'))) dif V +1/(4 pi) integral.double_(partial V) (sigma_m (bold(x')))/(norm(bold(x-x'))) dif S $<219-5>
+
+结合@219-2 和@219,并且由于磁铁是均匀磁化,$rho_m (bold(x')) equiv 0$,得到:
+
+$ bold(B(x)) = mu_0/(4 pi) integral.double_(partial V) (sigma_m (bold(x'))(bold(x-x')))/(norm(bold(x-x'))^3) dif S $<219-6>
+
+对其进行离散化处理,
+
+$ bold(B(x)) = mu_0/(4 pi) sum_k (sigma_m (bold(x_k))(bold(x-x_k)))/(norm(bold(x-x_k))^3) Delta A_k  $<219-7>
+
+永磁铁表面的磁荷密度受到回复磁导率#footnote[以后简单记为相对磁导率$mu_r$,有利于体现该物理量的类比性质.]的影响:@rovers2013modeling
+
+$ sigma_m = (bold(B_r) (mu_r^2+3))/(mu_0 (mu_r+1)^2) $<219-8>
+
+依旧进行有限元离散化求解,得到力:
+
+$ bold(F) = mu_0/(4 pi) sum_j sum_k (sigma_m (bold(x_j)) sigma_m (bold(x_k))(bold(x_j-x_k)))/(bold(norm(x_j-x_k))^3) Delta A_j Delta A_k $<219-9>
+
+- *对双圆柱体的离散化求解*
+
+
 
 == 运动与时域推进
 
