@@ -3,22 +3,22 @@ clear; clc; close all;
 %% 0. Define constants
 
 % All the parameters are defined in the SI unit.
-Br = 1;                       % Residual magnetic flux density (T)
-mu_r = 1;                     % Relative permeability
-mu_0 = 4*pi*1e-7;             % Permeability of free space
+Br = 1.22;                              % Residual magnetic flux density (T)
+mu_r = 1.03;                            % Relative permeability
+mu_0 = 4*pi*1e-7;                       % Permeability of free space
 
 before = (Br^2)*(mu_r+3)^2/((4*pi*mu_0)*(mu_r+1)^4);
 
-mag_shape_a = [1,1,1];        % Volume parameters [L, W, H]
-mag_shape_b = [1,1,1];        % Volume parameters [L, W, H]
+mag_shape_a = [0.01,0.01,0.01];         % Volume parameters [L, W, H]
+mag_shape_b = [0.02,0.02,0.02];         % Volume parameters [L, W, H]
 
-mag_place_a = [0,0,0];        % Centroid position [x, y, z]
-mag_place_b = [3,3,3];        % Centroid position [x, y, z]
+mag_place_a = [0,0,0];                  % Centroid position [x, y, z]
+mag_place_b = [0.005+0.01+0.001,0,0];   % Centroid position [x, y, z]
 
-% mag_euler_a = [0,0,0];      % Euler angles (attitude) of magnet A
-% mag_euler_b = [0,0,0];      % Euler angles (attitude) of magnet B
+% mag_euler_a = [0,0,0];                % Euler angles (attitude) of magnet A
+% mag_euler_b = [0,0,0];                % Euler angles (attitude) of magnet B
 
-step = 0.1;                   % Mesh density
+step = (min(mag_shape_a(1),mag_shape_b(1)))/10;   % Mesh density
 
 %% 1. Generate surface mesh - CELL CENTROIDS (grid center points)
 
@@ -64,9 +64,9 @@ function [total_Fx, total_Fy, total_Fz,total_Mx, total_My, total_Mz]=CFT(mesh1,m
     dz = mesh1(:,3) - mesh2(:,3)';
     r = sqrt(dx.^2 + dy.^2 + dz.^2);
 
-    Fx = params(1)*params(2)*params(3).*dx./r.^3;
-    Fy = params(1)*params(2)*params(3).*dy./r.^3;
-    Fz = params(1)*params(2)*params(3).*dz./r.^3;
+    Fx = params(1)*(params(2)^2)*params(3).*dx./r.^3;
+    Fy = params(1)*(params(2)^2)*params(3).*dy./r.^3;
+    Fz = params(1)*(params(2)^2)*params(3).*dz./r.^3;
 
     total_Fx = sum(Fx(:));
     total_Fy = sum(Fy(:));
