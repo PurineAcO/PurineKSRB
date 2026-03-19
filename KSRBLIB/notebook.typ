@@ -257,9 +257,7 @@ $ bold(F) = plus.minus (B_r^2 (mu_r+3)^2)/(4 pi mu_0 (mu_r+1)^4) sum_j sum_k (bo
 
 由于不考虑整个过程中的变形,这将是一个刚体动力学问题.时域推进的方法可以分为显式动力学和隐式动力学,前者基于显含时间的力学定律进行运动的描述,后者基于不显含时间的若干微分方程组描述运动.
 
-隐式动力学方法中,我们使用四元数进行描述.@zhang2021arrestinghal
-
-=== 隐式动力学方法
+我们采用隐式动力学方法,并使用四元数进行描述.@zhang2021arrestinghal
 
 Lagrange方程描述了基于广义坐标的动力学关系,我们定义基于绝对质心位置坐标$bold(r)$和姿态四元数$bold(theta)$(详见@C212)的广义坐标$bold(q)$
 
@@ -304,6 +302,44 @@ $ bold(M dot.double(q))+ #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ bold(dot
 其中#footnote[原文献中把$bold(0_(3 times 3))$误写成了$bold(0_(3 times 4))$@zhang2021arrestinghal]
 
 $ bold(H)=mat(bold(I_(3 times 3)),bold(0_(3 times underline(3)));bold(0_(4 times 3)),2bold(G^top)) $
+
+== 控制律
+
+将整个对接过程分为远场接近、姿态调节、滚转控制三个阶段.均使用PID控制器.
+
+=== 远场接近
+
+
+#let sgn = $"sgn"$
+
+为了实现航天器对接时的完全柔性化,我们需要设定一个目标使得收尾速度接近于0,选取常见的加速度反转式运动规划方案,进行如下规划:
+
+$ a = a_0 sgn(t_"mid" - t) $<238>
+
+这样得到以下方程:
+
+$ v_max^2 = a_0 x_0 $<239>
+
+我们通过给定$v_max$来决定这个运动过程,并以这个$v_max$引发的$x(t)$作为控制输入.为了使得$a_0$得以稳定,需要控制两端磁极的相对距离处于一个恒定的距离$x_c$,为此,当接近过程中,需要调控伺服电机,使得其拉动磁铁向后.我们设计伺服电机的电压$u$输出作为被控量,记此时伺服电机角速度为$omega$,两个磁铁对接机构的距离为$x$,那么$e = x-x_c$,以此建立PID控制律:
+
+$ v_m=K_p e + K_d (dif e)/(dif t) + K_i integral e dif t $ <240>
+
+经过$dif t$后,磁铁向后移动了$omega R dif t$,而整个装置向前了$v dif t$:
+
+$ e (t+ dif t) = e(t) - omega R dif t + v dif t $ <241>
+
+可以认为:
+
+$ (dif v)/(dif t) = F(x_c) $
+
+除此之外,由于信号的延迟和摩擦等物理因素,还需要考虑电机执行控制律所带来的时延$tau$.对于一个舵机,假设其转动惯量为$J$,阻尼因数为$B$,其转动满足
+
+$ J dot(omega) +B omega = K_t u $<242>
+
+记$T=J/B$,$K=(K_t R)/B$,传递函数为:
+
+$ #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ G(s) = (K(K_d s^2+K_p s+K_i)e^(-tau s ))/(s(T s+1)) $] $<243>
+
 
 #pagebreak()
 
