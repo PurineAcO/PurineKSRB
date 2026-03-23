@@ -36,9 +36,10 @@ class solver:
             F=-0.27915
         else:
             F=0
-        
-        if 0<self.x<self.x0:return -F
-        else:return F
+
+        if self.x>(self.x0)/2 and self.x<self.x0+1e-3:return F
+        elif self.x>0 and self.x<(self.x0)/2:return -F
+        else :return 0
 
     def newton(self,F):
         """use newton equation to solve the problem,please don't use this function directly,or give `F`"""
@@ -64,7 +65,7 @@ class solver:
         self.eint+=self.e   
         self.eold=self.e
 
-    def process(self,ifx=True,ifnan=True,xlim=0,nanlim=1e4,printtime=2,maxcnt=100):
+    def process(self, ifx=True, ifnan=True, xlim=1e-3, nanlim=1e4, printtime=2, maxcnt=10000):
         """use the `self.newton` to process the solution,you should define\n
         whether the program should stop when the `self.x` is out of the range\n
         use `ifnan` to define whether the program should stop when the `self.x` is over `nanlim`\n
@@ -72,20 +73,18 @@ class solver:
         use `printtime` to define the time interval to print the solution(*has been disabled*)\n
         use `maxcnt` to define the maximum count of the solver"""
 
-        if ifx and self.x<xlim:
-            print(self.resultable)
-            return 
-        if ifnan and self.x>nanlim:
-            print(self.resultable)
-            return
-        if self.solvercnt>maxcnt:
-            print(self.resultable)
-            return
-        self.newton(self.defF(self.x+self.xm))
-        self.PID(self.kp,self.ki,self.kd,self.ummax)
-        self.result()
-        # if self.solvercnt%printtime==0:print("time:",self.t,"x:",self.x,"v:",self.v)
-        self.process(ifx,ifnan,xlim,nanlim,printtime)
+        while True:
+            if ifx and self.x < xlim:return
+            if ifnan and self.x > nanlim:return
+            if self.solvercnt > maxcnt:return
+            
+            self.newton(self.defF(self.x + self.xm))
+            self.PID(self.kp, self.ki, self.kd, self.ummax)
+            self.result()
+            
+            if self.solvercnt % printtime == 0:
+                print("time:", self.t, "x:", self.x, "v:", self.v)
+
 
     def result(self):
         """record the `t`,`x`,`v`,`a` to the `self.resultable`"""
