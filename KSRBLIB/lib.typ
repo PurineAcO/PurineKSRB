@@ -119,12 +119,12 @@
   fake-par
 }
 
-// 询问框
-#let problem-counter = counter("problem")
-#let problem = custom-block.with(
+// 定理框
+#let problem-counter = counter("thm")
+#let thm = custom-block.with(
   title: [
     #problem-counter.step()
-    Ques #context problem-counter.display().
+    Thm #context problem-counter.display().
   ],
   color: config.problem-color,
 )
@@ -353,7 +353,7 @@
 
   show heading.where(level: 1): it => {
     set align(center)
-    set heading(numbering: "1")
+    set heading(numbering: "I")
     set text(config.title1-size)
     it
   }

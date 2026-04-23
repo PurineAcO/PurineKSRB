@@ -343,6 +343,103 @@ $ #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ G(s) = (K(K_d s^2+K_p s+K_i)e^(
 
 #pagebreak()
 
+= 频域上的计算流体力学方法
+
+本节主要介绍一种在频域上求解计算流体力学问题时域解的方法,并将这个问题应用于部分有一定研究价值的算例中.本课题由知春饭桶单独掌握.
+
+== 流动的物理模型
+
+=== Reynold 输运定理
+
+先考虑以下引理:设有两个向量$bold(r) = (x(t),y(t),z(t))^top,bold(r_0) = (a,b,c)^top$,记$bold(v) = ((dif x)/(dif t),(dif y)/(dif t),(dif z)/(dif t))^top = (u,v,w)^top$,两个向量的微分可以通过Jacobi行列式相互转换:$dif x dif y dif z = |bold(J)| dif a dif b dif c$,那么有:
+
+$ dif/(dif t) |bold(J)| = |bold(J)| nabla dot bold(v) $<3110>
+
+给出一个推导:
+
+$ (dif)/(dif t)|bold(J)| = (dif)/(dif t) mat(delim:"|",(partial x)/(partial a),(partial x)/(partial b),(partial x)/(partial c);(partial y)/(partial a),(partial y)/(partial b),(partial y)/(partial c);(partial z)/(partial a),(partial z)/(partial b),(partial z)/(partial c)) $<3111>
+
+考虑对某一个分量进行求导
+
+$ (dif)/(dif t) (partial x_i)/(partial a_j) &= (partial)/(partial a_j) (dif x_i)/(dif t) = (partial v_i)/(partial a_j) = (partial v_i)/(partial x_k) (partial x_k)/(partial a_j) \ &= (partial v_i)/(partial x) (partial x)/(partial a_j) +(partial v_i)/(partial y) (partial y)/(partial a_j)+ (partial v_i)/(partial z) (partial z)/(partial a_j) $ <3112>
+
+于是上面@3111 化简成为
+
+$ (dif)/(dif t)|bold(J)| = (partial u)/(partial x) mat(delim:"|",(partial x)/(partial a),(partial x)/(partial b),(partial x)/(partial c);(partial y)/(partial a),(partial y)/(partial b),(partial y)/(partial c);(partial z)/(partial a),(partial z)/(partial b),(partial z)/(partial c))+ (partial v)/(partial y) mat(delim:"|",(partial x)/(partial a),(partial x)/(partial b),(partial x)/(partial c);(partial y)/(partial a),(partial y)/(partial b),(partial y)/(partial c);(partial z)/(partial a),(partial z)/(partial b),(partial z)/(partial c))+(partial w)/(partial z) mat(delim:"|",(partial x)/(partial a),(partial x)/(partial b),(partial x)/(partial c);(partial y)/(partial a),(partial y)/(partial b),(partial y)/(partial c);(partial z)/(partial a),(partial z)/(partial b),(partial z)/(partial c)) = |bold(J)| nabla dot bold(v) $
+
+这就是@3110,我们接着考察一个控制体$Omega(t)$,其体内存在一种连续的物理量$f=f(bold(r),t)$,考察它的体积分的导数,但是这个体积分的积分区域是随着时间变化的,为此我们可以将其变化到一个不随时间变化的区域$Omega_0$上:
+
+$ & underline((dif)/(dif t) integral_(Omega(t)) f dif V )= (dif)/(dif t) integral_(Omega_0) f |bold(J)| dif V_0 = integral_(Omega_0)  (dif)/(dif t) (f |bold(J)|) dif V_0 =integral_(Omega_0) |bold(J)|(dif f)/(dif t) + f (dif|bold(J)|)/(dif t) dif V_0 \ &= integral_(Omega_0) |bold(J)|((partial f)/(partial t) +bold(v) dot nabla f) + f (|bold(J)| nabla dot bold(v)) dif V_0 = integral_(Omega_0) |bold(J)|((partial f)/(partial t) + bold(v) dot nabla f + f nabla dot bold(v)) dif V_0  \ &= integral_(Omega_0) |bold(J)|((partial f)/(partial t) + nabla dot (f bold(v))) dif V_0  = underline(integral_(Omega (t)) ((partial f)/(partial t) + nabla  dot (f bold(v))) dif)  V $<3113>
+
+
+@3113 展示了Reynold输运方程,这个方程的关键点在于,一个区域内某个物理量的表观增加量,等于其内生的增加量和从边界流入的增加量之和(Guass).
+
+== NS控制方程
+
+现在假设$f$代表密度$rho$,对于一个$Omega(t)$而言,流动中质量没有补充和亏损,那么上面@3113 左边项恒为0,不论此时流体被指定到哪一个位置.
+
+$ 0 equiv  integral_Omega(t) ((partial f)/(partial t) + nabla dot (f bold(v))) dif V  $
+
+化成微分形式,有*连续性方程*:
+
+$ (partial rho)/(partial t) + nabla dot (rho bold(v)) = 0 $<3114>
+
+对于一个二维问题,引入速度$u$和$v$,就得到了:
+
+#let partialer(it,it2) = {$(partial it)/(partial it2)$}
+
+$ partialer(rho,t) + partialer((rho u),x) + partialer((rho v),y) = 0 $<3115>
+
+继续假设$f$表示动量,
+
+$ bold(f) = partialer((rho bold(v)),t) + nabla dot (rho bold(v) times.o bold(v)) $<3116>
+
+其中这里的$bold(v) times.o bold(v) := (u bold(i) + v bold(j))(u bold(i)+ v bold(j)) = u^2 bold(i) + v^2 bold(j)$,写成分立的$X$,$Y$形式就是:
+
+$ cases(partialer((rho u),t)+partialer((rho u^2),x)+partialer((rho u v),y)=f_x,partialer((rho v),t)+partialer((rho v^2),y)+partialer((rho u v),x)=f_y) $<3117>
+
+下面着重分析一下受力,事实上根据材料力学的一些理论也可以进行理解,我们可以认为在流体微团受到两种力,一类是体积力,比如重力、电磁力、圆周运动中附加的离心力,也有一部分是表面力,这部分主要是粘性力和压力梯度.
+
+#figure(image("assets/image-4.png",width:50%),caption: [流体微团受到的力])
+
+于是我们代入@3117,得到动量输运方程:
+
+$ cases(partialer((rho u),t)+partialer((rho u^2+rho R T),x)+partialer((rho u v),y)=partialer(tau_(x x),x)+partialer(tau_(y y),y),partialer((rho v),t)+partialer((rho v^2+ rho R T),y)+partialer((rho u v),x)=partialer(tau_(x y),x)+partialer(tau_(y y),y)) $<3119>
+
+这里有几点需要说明,一是我们把理想气体状态方程带入了进去,二是我们并没有解析雷诺切应力的具体数值,这部分将由接下来的湍流模型封闭.
+
+最后我们假设这个$f = E = rho C_v T +1/2 rho (u^2+v^2)$,可以得到能量的控制方程:
+
+$ partialer((rho C_v T +1/2 rho (u^2+v^2)),t)+partialer((rho u C_p T +1/2 rho u (u^2+v^2)),x)+partialer((rho v C_p T +1/2 rho v (u^2+v^2)),y) \ =partial/(partial x) (u tau_(x x)+ v tau_(x y) +lambda_"eff" partialer(T,x) )+ (partial)/(partial y)(u tau_(x x) +v tau_(y y)+lambda_"eff" partialer(T,y)) $<31110>
+
+== RANS和湍流模型
+
+@3114,@3117,@31110 总共提供了4个方程,但是产生了8个未知数,分别是$u,v,rho,T,tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$,为此,我们需要额外的方程去封闭他们.这里我们仅仅介绍少部分RANS的内容,简单来说,RANS将将求平均值视为稳态情况的时间平均以及可重复瞬态情况的整体平均,通过把上面的方程全部替换为一种平均意义上的结果,再加上一些湍流模型的修正,来解析整个流场.
+
+这里我们使用的是_Spalart-Allmaras_模型,简称S-A湍流模型.该模型首先定义了一个求解变量$tilde(v)$及其控制方程:
+
+#let tv = $tilde(v)$
+
+$ partialer((rho tv),t)+partialer((rho u tv),x)+partialer((rho v  tv),y) = rho C_(b 1) (1-f_(t 2))tilde(S)tv +1/sigma (nabla dot ((mu+ rho tv )nabla tv) \ + C_(b 2) rho (nabla tv)^2 ) - rho (C_(w 1)f_w - (C_(b 1))/k^2 f_(t 2) )(tv/d)^2 -C_5 (rho tv^2 S^2)/(gamma R T) $<331>
+
+这个湍流模型很长,但是没有引入除了$tv$以外的任何其他变量,这部分将在后面加以补充描述.通过求解出$tv$,就可以由
+
+$ v_t  = f_(v 1) tv $<332>
+
+得到湍流涡粘性$v_t$,这个参数将会修正粘度$mu_"eff"$和$lambda_"eff"$
+
+$ mu_"eff" = mu(T) + rho v_t $<333>
+
+$ lambda_"eff" = (mu(T))/(P r) + (rho v_t)/(P r_t) $<334>
+
+由此封闭了$tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$:
+
+$ cases(tau_(x x) = 2mu_"eff" partialer(u,x)-2/3 mu_"eff" (partialer(u,x)+partialer(v,y)),tau_(x y) = mu_"eff" (partialer(u,y)+partialer(v,x)),tau_(x x) = 2mu_"eff" partialer(v,y)-2/3 mu_"eff" (partialer(u,x)+partialer(v,y))) $<334>
+
+
+
+#pagebreak()
+
 
 
 #bibliography("biber.bib",style: "cell")
