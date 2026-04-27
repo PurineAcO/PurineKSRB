@@ -404,7 +404,9 @@ $ cases(partialer((rho u),t)+partialer((rho u^2),x)+partialer((rho u v),y)=f_x,p
 
 于是我们代入@3117,得到动量输运方程:
 
-$ cases(partialer((rho u),t)+partialer((rho u^2+rho R T),x)+partialer((rho u v),y)=partialer(tau_(x x),x)+partialer(tau_(y y),y),partialer((rho v),t)+partialer((rho v^2+ rho R T),y)+partialer((rho u v),x)=partialer(tau_(x y),x)+partialer(tau_(y y),y)) $<3119>
+$ partialer((rho u),t)+partialer((rho u^2+rho R T),x)+partialer((rho u v),y)=partialer(tau_(x x),x)+partialer(tau_(y y),y) $<3119>
+
+$ partialer((rho v),t)+partialer((rho v^2+ rho R T),y)+partialer((rho u v),x)=partialer(tau_(x y),x)+partialer(tau_(y y),y) $<3119-1>
 
 这里有几点需要说明,一是我们把理想气体状态方程带入了进去,二是我们并没有解析雷诺切应力的具体数值,这部分将由接下来的湍流模型封闭.
 
@@ -414,27 +416,87 @@ $ partialer((rho C_v T +1/2 rho (u^2+v^2)),t)+partialer((rho u C_p T +1/2 rho u 
 
 == RANS和湍流模型
 
-@3114,@3117,@31110 总共提供了4个方程,但是产生了8个未知数,分别是$u,v,rho,T,tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$,为此,我们需要额外的方程去封闭他们.这里我们仅仅介绍少部分RANS的内容,简单来说,RANS将将求平均值视为稳态情况的时间平均以及可重复瞬态情况的整体平均,通过把上面的方程全部替换为一种平均意义上的结果,再加上一些湍流模型的修正,来解析整个流场.
+=== URANS方法
 
-这里我们使用的是_Spalart-Allmaras_模型,简称S-A湍流模型.该模型首先定义了一个求解变量$tilde(v)$及其控制方程:
 
-#let tv = $tilde(v)$
+
+@3114,@3119,@3119-1,@31110 总共提供了4个方程,但是产生了8个未知数,分别是$u,v,rho,T,tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$,为此,我们需要额外的方程去封闭他们.
+
+这里我们仅仅介绍少部分RANS的内容,简单来说,RANS将将求平均值视为稳态情况的时间平均以及可重复瞬态情况的整体平均,通过把上面的方程全部替换为一种平均意义上的结果,再加上一些湍流模型的修正,来解析整个流场.
+
+=== S-A湍流模型
+
+我们使用的是_Spalart-Allmaras_模型,简称S-A湍流模型.
+
+该模型首先定义了一个求解变量$tilde(nu)$及其控制方程:
+
+#let tv = $tilde(nu)$
 
 $ partialer((rho tv),t)+partialer((rho u tv),x)+partialer((rho v  tv),y) = rho C_(b 1) (1-f_(t 2))tilde(S)tv +1/sigma (nabla dot ((mu+ rho tv )nabla tv) \ + C_(b 2) rho (nabla tv)^2 ) - rho (C_(w 1)f_w - (C_(b 1))/k^2 f_(t 2) )(tv/d)^2 -C_5 (rho tv^2 S^2)/(gamma R T) $<331>
 
 这个湍流模型很长,但是没有引入除了$tv$以外的任何其他变量,这部分将在后面加以补充描述.通过求解出$tv$,就可以由
 
-$ v_t  = f_(v 1) tv $<332>
+$ nu_t  = f_(v 1) tv $<332>
 
-得到湍流涡粘性$v_t$,这个参数将会修正粘度$mu_"eff"$和$lambda_"eff"$
+得到湍流涡粘性$v_t$,这个参数将会修正粘度$mu_"eff"$和$lambda_"eff"$,其中$mu=mu(T)$为动力粘度,$Pr$为普朗特数,$Pr_t$为湍流普朗特数.
 
-$ mu_"eff" = mu(T) + rho v_t $<333>
+$ mu_"eff" = mu(T) + rho nu_t $<333>
 
-$ lambda_"eff" = (mu(T))/(P r) + (rho v_t)/(P r_t) $<334>
+$ lambda_"eff" = (mu(T))/(Pr) + (rho nu_t)/(Pr_t) $<334>
 
-由此封闭了$tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$:
+由此封闭了$tau_(x x),tau_(x y),tau_(y y)$:
 
-$ cases(tau_(x x) = 2mu_"eff" partialer(u,x)-2/3 mu_"eff" (partialer(u,x)+partialer(v,y)),tau_(x y) = mu_"eff" (partialer(u,y)+partialer(v,x)),tau_(x x) = 2mu_"eff" partialer(v,y)-2/3 mu_"eff" (partialer(u,x)+partialer(v,y))) $<334>
+$ cases(tau_(x x) = 2mu_"eff" partialer(u,x)-2/3 mu_"eff" (partialer(u,x)+partialer(v,y)),tau_(x y) = mu_"eff" (partialer(u,y)+partialer(v,x)),tau_(x x) = 2mu_"eff" partialer(v,y)-2/3 mu_"eff" (partialer(u,x)+partialer(v,y))) $<335>
+
+生成湍流粘度时用到的$f_(v 1)$由以下方程推出:
+
+$ f_(v 1) = (chi^3)/(chi^3+C_(v 1)^3) $<336>
+
+其中$C_(v 1)=7.1$,而湍流粘度比$chi = tv/nu$,$nu = mu/rho$
+
+- *对流和扩散*
+
+原始的S-A湍流模型输运方程表示为:
+
+$ partialer(tv,t) = M(tv) + P(tv) + D(tv) + T $<337>
+
+其中这里的
+
+$ M(tv) = - nabla (tv dot bold(v) )+ 1/sigma (nabla dot ((nu +tv) nabla tv) +C_(b 2) (nabla tv)^2 ) $<338>
+
+表示了对流项和扩散项的作用,其中$sigma=2/3,C_(b 2) = 0.622$
+
+- *湍流产生项*
+
+$ P(tv) = C_(b 1)(1-f_(t 2))tilde(S) tv $<339>
+
+其中
+
+$ f_(t 2) = C_(t 3) exp(- c_(t 4) chi^2) $<3310>
+
+其中$C_(t 3)=1.2,C_(t 4) = 0.5$,此外
+
+$ tilde(S) = max(0.3 Omega,Omega + (f_(v 2) tv)/(kappa^2 d^2)) $<3311>
+
+其中$Omega$为平均涡转速张量
+
+$ Omega = sqrt(2) ||bold(Omega)|| = sqrt(2)/2 ||nabla bold(v) - nabla bold(v^top)||  $<3312>
+
+此外
+
+$ f_(v 2) = 1- chi/(chi f_(v 1) + 1) $<3313>
+
+常数$kappa = 0.41$,$d$表示和壁面的距离.
+
+- *壁面衰减函数*
+
+$ D(tv) = (C_(w 1) f_(w) - (C_(b 1)/(kappa^2) )f_(t 2))(tv/d)^2 $<3314>
+
+其中
+
+$ C_(w 1) = (C_(b 1))/kappa^2 + (1+ C_(b 2))/sigma  $<3315>
+
+
 
 
 

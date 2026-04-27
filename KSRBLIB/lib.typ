@@ -12,7 +12,7 @@
   zh_fangsong: "STFangsong",
   // 英文字体
   en_sans_serif: "New Computer Modern",
-  en_serif: "New Computer Modern",
+  en_serif: "Times New Roman",
   en_typewriter: "Courier New",
   en_code: "Consolas",
 )
