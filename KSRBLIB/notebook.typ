@@ -345,7 +345,7 @@ $ #box(stroke:0.75pt,outset:2pt,baseline: 40%)[$ G(s) = (K(K_d s^2+K_p s+K_i)e^(
 
 = 频域上的计算流体力学方法
 
-本节主要介绍一种在频域上求解计算流体力学问题时域解的方法,并将这个问题应用于部分有一定研究价值的算例中.本课题由知春饭桶单独掌握.
+本节主要介绍一种在频域上求解计算流体力学问题时域解的方法@crouch2009origin@crouch2007predicting,并将这个问题应用于部分有一定研究价值的算例中.本课题由知春饭桶单独掌握.
 
 == 流动的物理模型
 
@@ -500,85 +500,87 @@ $ C_(w 1) = (C_(b 1))/kappa^2 + (1+ C_(b 2))/sigma  $<3315>
 
 === 本征正交分解(POD)
 
-本征正交分解是一种基于特征值分解的降维方法,通过对一个数据矩阵进行SVD分解,得到其特征值和特征向量,从而提取出数据中的主要模式.
+本征正交分解是一种基于特征值分解的降维方法,通过对一个数据矩阵进行SVD分解,得到其特征值和特征向量,从而提取出数据中的主要模式@hinze2005proper.
 
 我们假设有一个矩阵$bold(Y) = (bold(y_1),bold(y_2),...,bold(y_n)) in RR^(m times n)$,满足$m >> n$,并且有
 
-$ "rank" bold(Y) = d <= min(m,n) $
+$ "rank" bold(Y) = d <= min(m,n) $ <3411>
 
 对其进行奇异值分解得到$bold(Y) = bold(U Sigma V^top) $,其中$bold(U) in RR^(m times m),bold(Sigma) in RR^(m times n),bold(V) in RR^(n times n)$,$bold(U)$和$bold(V)$分别是左奇异向量矩阵和右奇异向量矩阵,而$bold(Sigma)$是一个对角矩阵,其对角线上的元素为奇异值.
 
-$ bold(Sigma) = "diag"(bold(Sigma_0),bold(0)) = mat(mat(sigma_1;,sigma_2;,,...,;,,,sigma_d),bold(0);bold(0),bold(O)) $
+$ bold(Sigma) = "diag"(bold(Sigma_0),bold(0)) = mat(mat(sigma_1;,sigma_2;,,...,;,,,sigma_d),bold(0);bold(0),bold(O)) $<3412>
 
 进行代数运算,容易知道$bold(Y^top) bold(u_i) = sigma_i bold(v_i)$,$bold(Y) bold(v_i) = sigma_i bold(u_i)$,这样就得到了$bold(Y^top Y v_i) = sigma_i^2 bold(v_i),bold(Y Y^top u_i) = sigma_i^2 bold(u_i)$,也就是说,$bold(v_i)$和$bold(u_i)$分别是$bold(Y^top Y)$和$bold(Y Y^top)$的特征向量,而$sigma_i^2$是他们的特征值.
 
 现在我们令以下最大值问题
 
-$ max_(tilde(u_1),tilde(u_2),...,tilde(u_ell) in RR^(m times 1)) sum_(i=1)^ell sum_(j=1)^n |chevron bold(y_j),bold(tilde(u)_i)  chevron.r|^2 , "s.t." chevron bold(tilde(u)_i tilde(u)_j) chevron.r = delta_(i j) $
+$ max_(tilde(u_1),tilde(u_2),...,tilde(u_ell) in RR^(m times 1)) sum_(i=1)^ell sum_(j=1)^n |chevron bold(y_j),bold(tilde(u)_i)  chevron.r|^2 , "s.t." chevron bold(tilde(u)_i tilde(u)_j) chevron.r = delta_(i j) $<3413>
 
-其中截断位置$ell in (1,d)$.上面这个式子可以简化成以下形式:
+其中截断位置$ell in (1,d)$.@3413 可以简化成以下形式:
 
-$ max_(tilde(bold(u))_i in RR(m times 1)) ||bold(tilde(U)^top Y)||^2_F ,"s.t." bold(tilde(U)^top U) = bold(I_ell) $
+$ max_(tilde(bold(u))_i in RR(m times 1)) ||bold(tilde(U)^top Y)||^2_F ,"s.t." bold(tilde(U)^top U) = bold(I_ell) $<3414>
 
-实际上,这个式子就是找一组标准正交基,使得矩阵$bold(Y)$在Frobenius范数意义下的投影最大,也就是说,我们希望找到一个子空间,使得数据矩阵$bold(Y)$在这个子空间上的投影尽可能大.而$ell$的意义在于进行约等.当$ell = d$时,相当于没有删除任何信息,而当$ell < d$时,相当于删除了某些信息,我们用$epsilon(ell)$来衡量保存信息的比例.
+实际上,@3414 就是找一组标准正交基,使得矩阵$bold(Y)$的投影在Frobenius范数意义下最大,也就是说,我们希望找到一个子空间,使得数据矩阵$bold(Y)$在这个子空间上的投影尽可能大.而$ell$的意义在于进行约等.当$ell = d$时,相当于没有删除任何信息,而当$ell < d$时,相当于删除了某些信息,我们用$epsilon(ell)$来衡量保存信息的比例#footnote[也有的人认为应该定义成$epsilon(ell) = (sum_(i=1)^ell |sigma_i|)\/(sum_(i=1)^d |sigma_i|)$].
 
-$ epsilon(ell) = (sum_(i=1)^ell sigma_i)/(sum_(i=1)^d sigma_i) $
+$ epsilon(ell) = (sum_(i=1)^ell sigma_i^2)/(sum_(i=1)^d sigma_i^2) $<3415>
 
-下面我们将证明左奇异向量将是上面优化问题的最优解:
+下面我们将证明左奇异向量将是@3413 的最优解:
 
-$ ||bold(tilde(U)^top Y)||^2_F = "tr"((tilde(bold(U))^top bold(Y))^top (tilde(bold(U))^top bold(Y))) = "tr"(bold(Y^top Y)) $
+$ ||bold(tilde(U)^top Y)||^2_F = "tr"((tilde(bold(U))^top bold(Y))^top (tilde(bold(U))^top bold(Y))) = "tr"(bold(Y^top Y)) $<3416>
 
 由于$bold(Y^top Y)$至少半正定,因此有
 
-$ "tr"(bold(Y^top Y)) = "tr"(bold(Q Lambda Q^top)) approx sum_(k=1)^ell sum_(i=1)^n lambda_i q_(i k)^2 = sum_(i=1)^n lambda_i c_i  $
+$ "tr"(bold(Y^top Y)) = "tr"(bold(Q Lambda Q^top)) approx sum_(k=1)^ell sum_(i=1)^n lambda_i q_(i k)^2 = sum_(i=1)^n lambda_i c_i  $<3417>
 
-其中$c_i = sum_(k=1)^ell q_(i k)^2 >=0,sum_(i=1)^n c_i = l$,我们这里要求$lambda_1>=lambda_2>=...>=lambda_d>0$,因此有$c_1=...=c_l = 1,c_(l+1) =... =  c_n=0$,这样才使得tr最大,代回得到了$tilde(bold(U)) = bold(U)$,即为左奇异向量组成的矩阵.
+其中$c_i = sum_(k=1)^ell q_(i k)^2 >=0,sum_(i=1)^n c_i = l$,我们这里要求$lambda_1>=lambda_2>=...>=lambda_d>0$,因此有$c_1=...=c_l = 1,c_(l+1) =... =  c_n=0$,这样才使得$tr(bold(Y^top Y))$最大,代回得到了$tilde(bold(U)) = bold(U)$,即为左奇异向量组成的矩阵.
 
 === 动态模态分解(DMD)
 
-考虑一个线性动力系统:$dot(bold(x)) = bold(A x) $,这个方程的解析解可以表示为$bold(x) = e^(bold(A) t) bold(x_0) $,其中$bold(x_0)$为和时间无关的量,如果矩阵$bold(A)$可对角化,那么将其写成$bold(A = Phi Lambda Phi^(-1))$,其中$Phi = (bold(phi.alt_1),bold(phi.alt_2),...,bold(phi.alt_m)) in CC^(m times m)$,表示DMD中的模态,而$Lambda = "diag"(omega_1,omega_2,...,omega_m) in CC^(m times m)$,由此得到
+考虑一个线性动力系统:$dot(bold(x)) = bold(A x) $,这个方程的解析解可以表示为$bold(x) = e^(bold(A) t) bold(x_0) $,其中$bold(x_0)$为和时间无关的量,如果矩阵$bold(A)$可对角化,那么将其写成$bold(A = Phi Lambda Phi^(-1))$,其中$Phi = (bold(phi.alt_1),bold(phi.alt_2),...,bold(phi.alt_m)) in CC^(m times m)$,表示DMD中的模态,而$bold(Lambda) = "diag"(omega_1,omega_2,...,omega_m) in CC^(m times m)$,由此得到
 
-$ bold(x)(t) = sum_(k=1)^n bold(phi.alt_k) e^(omega_k t) bold(b_k) = bold(Phi) e^(bold(Omega) t) bold(b) $
+$ bold(x)(t) = sum_(k=1)^n bold(phi.alt_k) e^(omega_k t) bold(b_k) = bold(Phi) e^(bold(Omega) t) bold(b) $<3421>
 
-以上是对于连续系统的解析,下面考虑只有离散时间$Delta t$的情形
+以上是对于连续系统的解析,下面考虑只有离散时间$Delta t$的情形@poplingher2019modal
 
-$ bold(x_(k+1) )= bold(x)((k+1)Delta t) = e^(bold(cal(A)) (k+1) Delta t) bold(x_0) = e^(bold(cal(A)) Delta t) bold(x_k) $
+$ bold(x_(k+1) )= bold(x)((k+1)Delta t) = e^(bold(cal(A)) (k+1) Delta t) bold(x_0) = e^(bold(cal(A)) Delta t) bold(x_k) $<3422>
 
-这个系统可以被写成$bold(x)(t) = bold(Phi Lambda^k b)$,DMD就是用来寻找$bold(A)$的低阶近似,最小化时间推进的残差,假设存在两个连续的时间序列$bold(X)_m = (bold(x_1),bold(x_2),...,bold(x_m)),bold(X)_(m+1) = (bold(x_2),bold(x_3),...,bold(x_(m+1)))$,他们将满足$bold(X_(m+1)) = bold(A) bold(X)_m$,因此$bold(A)$的最佳估计为,其中$(dot)^dagger$表示伪逆:
+这个系统可以被写成$bold(x)(t) = bold(Phi Lambda^k b)$,DMD就是用来寻找$bold(A)$的低阶近似,最小化时间推进的残差,假设存在两个连续的时间序列$bold(X)_m = (bold(x_1),bold(x_2),...,bold(x_m)),bold(X)_(m+1) = (bold(x_2),bold(x_3),...,bold(x_(m+1)))$,他们将满足$bold(X_(m+1)) = bold(A) bold(X)_m$,因此$bold(A)$的最佳估计为@3423,其中$(dot)^dagger$表示伪逆#footnote[定义$bold(A)^dagger = (bold(A)^H bold(A))^(-1)bold(A)^H$]:
 
-$ bold(A) = X_(m+1) X_(m)^dagger $
+$ bold(A) = X_(m+1) X_(m)^dagger $<3423>
 
-由于$bold(X)$稠密,求解是不现实的.为此我们需要进行一些处理,我们对$bold(X)$进行奇异值分解,得到$bold(X) = bold(U Sigma V)^H $,其中$(dot)^H$表示共轭转置,随后截断前$ell$个奇异值,使得
+由于$bold(X)$稠密,求解是不现实的.为此我们需要进行一些处理,我们对$bold(X)$进行奇异值分解,得到$bold(X) = bold(U Sigma V)^H $,其中$(dot)^H$表示共轭转置,随后截断前$ell$个奇异值,使得<3424>
 
-$ bold(X) approx bold(U)_ell bold(Sigma)_ell bold(V)^H_ell $
+$ bold(X) approx bold(U)_ell bold(Sigma)_ell bold(V)^H_ell $<3425>
 
 其中,$bold(U) in CC^(n times ell),bold(Sigma) in CC^(ell times ell),bold(V) in CC^(m times ell)$,其中$bold(U)$蕴含了POD模态,对$bold(X_(m+1)) = bold(A) bold(X)_m$左乘$bold(U)^H$,右乘$bold(V) bold(Sigma)^dagger$得到:
 
-$ bold(U)^H bold(X)_(m+1) bold(V Sigma)^dagger approx bold(U)^H bold(A) bold(U) bold(Sigma) bold(V)^H bold(V) bold(Sigma)^dagger = bold(U)^H bold(A) bold(U) = bold(tilde(A)) approx  bold(A)  $
+$ bold(U)^H bold(X)_(m+1) bold(V Sigma)^dagger approx bold(U)^H bold(A) bold(U) bold(Sigma) bold(V)^H bold(V) bold(Sigma)^dagger = bold(U)^H bold(A) bold(U) = bold(tilde(A)) approx  bold(A)  $<3426>
 
-我们利用$tilde(bold(A))$进行时间推进,不断求出各种$tilde(bold(x))_k$,我们对$bold(tilde(A))$进行特征值分解得到$bold(tilde(A) W) = bold(W Lambda_ell)$,其中$bold(Lambda)_ell="diag"(mu_1,mu_2,dots,mu_ell),bold(W) = (bold(omega_1),bold(omega_2),dots,bold(omega_ell))$,下面我们将把这些简化的结果转移到原来的问题上.
+我们利用$tilde(bold(A))$进行时间推进,不断求出各种$tilde(bold(x))_k$,对$bold(tilde(A))$进行特征值分解得到$bold(tilde(A) W) = bold(W Lambda_ell)$,其中$bold(Lambda)_ell="diag"(mu_1,mu_2,dots,mu_ell),bold(W) = (bold(omega_1),bold(omega_2),dots,bold(omega_ell))$,下面我们将把这些简化的结果转移到@3421 上.
 
-首先考虑空间上的问题,上面的操作实际上已经完成了一次POD,所以要将特征向量恢复回去,于是有$bold(phi.alt)_i = bold(U) bold(omega)_i  $,下面我们重构动力系统:
+首先考虑空间上的问题,上面的操作实际上已经完成了一次POD,所以要将特征向量恢复回去,于是有$bold(phi.alt)_i = bold(U) bold(omega)_i$.
 
-$ bold(x)(t) = sum_(j=1)^ell alpha_j e^(lambda_j t) bold(phi.alt_j) = sum_(j=1)^ell alpha_j bold(Phi)_j e^(-zeta_j omega_(n,j) t)(cos(omega_(d,h) t) + "i" sin(omega_(d,j) t)) $
+下面我们重构@3421:
 
-下面我们考虑这些未定参数,由于$ bold(cal(A)) bold(phi.alt)_k = lambda_k bold(phi.alt)_k$,那么$bold(A) bold(phi.alt)_k = e^(bold(cal(A)) Delta t )bold(phi.alt)_k = e^(lambda_k Delta t)bold(phi.alt)_k=mu_k bold(phi.alt)_k $,这样就得到了
+$ bold(x)(t) = sum_(j=1)^ell alpha_j e^(lambda_j t) bold(phi.alt_j) = sum_(j=1)^ell alpha_j bold(Phi)_j e^(-zeta_j omega_(n,j) t)(cos(omega_(d,h) t) + "i" sin(omega_(d,j) t)) $<3427>
 
-$ lambda_k = (ln(mu_k))/(Delta t) $
+考虑@3427 未定参数,由于$ bold(cal(A)) bold(phi.alt)_k = lambda_k bold(phi.alt)_k$,那么$bold(A) bold(phi.alt)_k = e^(bold(cal(A)) Delta t )bold(phi.alt)_k = e^(lambda_k Delta t)bold(phi.alt)_k=mu_k bold(phi.alt)_k $,这样就得到了
 
-特征值$mu_k = |mu_k| angle mu$,所以上面可以改写成$lambda_k = (ln(|mu_k|))/(Delta t)+ "i" (angle mu)/(Delta t)$,与$lambda_k = -zeta_j omega_(n,j) +"i"omega_(d,j)$对齐,得到
+$ lambda_k = (ln(mu_k))/(Delta t) $<3428>
 
-$ omega_n = (|ln mu|)/(Delta t) ,zeta =-(ln |mu|)/(|ln mu|),omega_d = omega_n sqrt(1-zeta^2) $
+特征值$mu_k = |mu_k| angle mu_k$,所以上面可以改写成$lambda_k = (ln(|mu_k|))/(Delta t)+ "i" (angle mu_k)/(Delta t)$,与$lambda_k = -zeta_j omega_(n,j) +"i"omega_(d,j)$对齐,得到
+
+$ omega_n = (|ln mu|)/(Delta t) ,zeta =-(ln |mu|)/(|ln mu|),omega_d = omega_n sqrt(1-zeta^2) $<3429>
 
 带入初始状态$t=0$,得到$bold(x)_0 = sum_(j=1)^ell alpha_j bold(phi.alt_j) = bold(U) bold(W) bold(alpha)$,所以得到了向量$bold(alpha)$
 
-$ bold(alpha) = bold(W)^(-1) bold(U)^H bold(x_0) $
+$ bold(alpha) = bold(W)^(-1) bold(U)^H bold(x_0) $<34210>
 
-我们同样注意到,以上模态都是共轭出现,也就是说,可以通过适当的排列组合,将复数部分抵消,得到实数的解
+我们同样注意到,以上模态都是共轭出现,也就是说,可以通过适当的排列组合,将@3427 复数部分抵消,得到实数的解
 
-$ bold(x)(t) = sum_j 2 |alpha_j| |bold(Phi_j)| e^(-zeta_j omega_(n,j) t) cos(omega_(d,h) t + phi_(alpha_j) +bold(phi_(Phi_j))) $
+$ bold(x)(t) = sum_j 2 |alpha_j| |bold(Phi_j)| e^(-zeta_j omega_(n,j) t) cos(omega_(d,h) t + phi_(alpha_j) +bold(phi_(Phi_j))) $<34211>
 
-这里将$alpha_j,bold(Phi_j)$全部角度化了,他们将作为相移的部分参与分析,正常情况下,我们只需要取这里能够增长的振动模态作为分析结果即可,也有人提出了考虑全局的算法.当我们考虑有节律的流动失稳时,应当明确的时这是一个极限环(LCO),所以上面的衰减因子应为1.
+这里将$alpha_j,bold(Phi_j)$全部角度化了,他们将作为相移的部分参与分析,正常情况下,我们只需要取这里能够增长的振动模态作为分析结果即可,也有人提出了考虑全局的算法@kou2017improved,当我们考虑有节律的流动失稳时,应当明确的时这是一个极限环(LCO),所以上面的衰减因子应为1.
 
 
 
