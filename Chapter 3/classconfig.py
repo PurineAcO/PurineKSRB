@@ -5,17 +5,13 @@ gamma = 1.4      # gamma = Cp/Cv
 R = 287.06       # gas constant,which is for air
 T0 = 288.16      # referrence temperature,入口静温
 Ts = 110         # Sutherland costant
-mu0 = 1.7894e-5  # \mu for T0,动力粘度
+mu0 = 1.7894e-5  # μ for T0,动力粘度
 P0 = 101325.0    # referrence pressure,入口静压
 c0 = 340.28      # referrence sound velocity,海平面参考声速
 
 #define the simulation state
 AOA = 0          # attack angle(which unit is deg)
 Ma = 0.2         # Mach Number
-
-#define the farfield
-
-
 
 # area for the global variables 
 i_total = 0
