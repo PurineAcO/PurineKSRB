@@ -506,55 +506,55 @@ $ C_(w 1) = (C_(b 1))/kappa^2 + (1+ C_(b 2))/sigma  $<3315>
 
 考虑一个方程:
 
-$ partialer(bold(u),t)+bold(A(u)) partialer(bold(u),x) = bold(0) $
+$ partialer(bold(u),t)+bold(A(u)) partialer(bold(u),x) = bold(0) $<3316>
 
 我们需要找到一个标量函数$W(bold(u))$,使得其沿着某个方向$gamma: x=x(t)$满足$(dif W)/(dif t)=0$,而
 
-$ (dif W)/(dif t) = partialer(W,t) + partialer(W,x) (dif x)/(dif t) =^Delta partialer(W,t) + lambda partialer(W,x)  $
+$ (dif W)/(dif t) = partialer(W,t) + partialer(W,x) (dif x)/(dif t) =^Delta partialer(W,t) + lambda partialer(W,x)  $<3317>
 
 比较
 
-$ (dif W)/(dif t) &= nabla_bold(u) W dot ((dif bold(u))/(dif t)) = nabla_bold(u) W (partialer(bold(u),t) + partialer(bold(u),x) (dif x)/(dif t) ) \ &= nabla_bold(u) W dot (-bold(A)(bold(u)) + lambda bold(I) ) partialer(bold(u),x) $
+$ (dif W)/(dif t) &= nabla_bold(u) W dot ((dif bold(u))/(dif t)) = nabla_bold(u) W (partialer(bold(u),t) + partialer(bold(u),x) (dif x)/(dif t) ) \ &= nabla_bold(u) W dot (-bold(A)(bold(u)) + lambda bold(I) ) partialer(bold(u),x) $<3318>
 
 为了满足$(dif W)/(dif t) = 0$,就需要
 
-$ nabla_bold(u) W dot (bold(A(u))-lambda bold(I)) = 0 $
+$ nabla_bold(u) W dot (bold(A(u))-lambda bold(I)) = 0 $<3319>
 
 也就是说
 
-$ (nabla_bold(u) W)^top (bold(A(u))-lambda bold(I)) = 0 $
+$ (nabla_bold(u) W)^top (bold(A(u))-lambda bold(I)) = 0 $<3320>
 
 取转置得到
 
-$ bold(A^top (u)) nabla_bold(u) W = lambda bold(I) nabla_bold(u) W $
+$ bold(A^top (u)) nabla_bold(u) W = lambda bold(I) nabla_bold(u) W $<3321>
 
 也就是说$nabla_bold(u) W$平行于$bold(A^top (u))$的特征向量,也就是说,$nabla_bold(u) W$是$bold(A)$的*左特征向量*,这里需要补充的是,左特征值和右特征值是等同的,但是左特征向量和右特征向量并不是,*对于不同的特征值,其对应的左特征向量和右特征向量总是正交*,对于相同的特征值,则未必如此.(简单的线性代数问题,证明从略)
 
 这也就很好的阐述了Riemann不变量所对应的特征线的含义,在一个流场中存在很多族特征线,只有在这些特征线上,才会有Riemann不变量的存在,这种选择性正交的关系,很好的将不同的不变量分开.这也就得到了以下方程:
 
-$ (dif u_1)/(dif r_(i 1)) =(dif u_2)/(dif r_(i 2)) =(dif u_3)/(dif r_(i 3)) =(dif u_4)/(dif r_(i 4))  $
+$ (dif u_1)/(dif r_(i 1)) =(dif u_2)/(dif r_(i 2)) =(dif u_3)/(dif r_(i 3)) =(dif u_4)/(dif r_(i 4))  $<3322>
 
 === 二维Euler方程的Riemann不变量
 
 下面考虑二维的Euler方程,我们先考虑$x$方向,在对称的替代$y$方向,实际上,在实际操作中,压力远场一般被布置成圆形,彼时考虑的应该是$n$和$tau$方向
 
-$ partialer(bold(u),t) + partialer(bold(F(u)),x) = partialer(,t)vec(rho,rho u,rho v,E) + partialer(,t)vec(rho u ,rho u^2 + p,rho u v,u(E+p)) =0 $
+$ partialer(bold(u),t) + partialer(bold(F(u)),x) = partialer(,t)vec(rho,rho u,rho v,E) + partialer(,t)vec(rho u ,rho u^2 + p,rho u v,u(E+p)) =0 $<3323>
 
 其中$E = rho e+1/2 rho(u^2+v^2),p=(gamma-1)rho e$,我们记$bold(u) =(u_1,u_2,u_3,u_4)^top$,经过简单推导得到:
 
-$ cases(F_1 = u_2,F_2 = u_2^2/u_1+(gamma-1)(u_4-(u_2^2+u_3^2)/(2u_1)),F_3 = (u_2u_3)/(u_1),F_4 = u_2/u_1 (gamma u_4 - (gamma-1)(u_2^2+u_3^2)/(2u_1))) $
+$ cases(F_1 = u_2,F_2 = u_2^2/u_1+(gamma-1)(u_4-(u_2^2+u_3^2)/(2u_1)),F_3 = (u_2u_3)/(u_1),F_4 = u_2/u_1 (gamma u_4 - (gamma-1)(u_2^2+u_3^2)/(2u_1))) $<3324>
 
 进行求导得到:
 
-$ bold(A(u)) = mat(0,1,0,0;((gamma-3)u^2+(gamma-1)v^2)/2,(3-gamma)u,-(gamma-1)v,gamma-1;-u v,v,u,0;((gamma-2)(u^3+u v^2))/2-(u a^2)/(gamma-1),((3-2gamma)u^2+v^2)/2+a^2/(gamma-1),-(gamma-1)u v,gamma u)  $
+$ bold(A(u)) = mat(0,1,0,0;((gamma-3)u^2+(gamma-1)v^2)/2,(3-gamma)u,-(gamma-1)v,gamma-1;-u v,v,u,0;((gamma-2)(u^3+u v^2))/2-(u a^2)/(gamma-1),((3-2gamma)u^2+v^2)/2+a^2/(gamma-1),-(gamma-1)u v,gamma u)  $<3325>
 
 其中$a=(gamma p)/rho$为当地声速,特征值为$lambda_1=lambda_2=u,lambda_3=u+a,lambda_4=u-a$,对应的特征向量组成的矩阵$bold(R)$为:
 
-$ bold(R) = mat(2/(u^2-v^2),(-2v)/(u^2-v^2),(2gamma-2)/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2gamma-2)/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));(2u)/(u^2-v^2),(-2u v)/(u^2-v^2),(2(gamma-1)(u-a))/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2(gamma-1)(u+a))/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));0,1,(2(gamma-1)v)/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2(gamma-1)v)/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));1,0,1,1)={r_(i j)} $
+$ bold(R) = mat(2/(u^2-v^2),(-2v)/(u^2-v^2),(2gamma-2)/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2gamma-2)/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));(2u)/(u^2-v^2),(-2u v)/(u^2-v^2),(2(gamma-1)(u-a))/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2(gamma-1)(u+a))/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));0,1,(2(gamma-1)v)/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2(gamma-1)v)/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));1,0,1,1)={r_(i j)} $<3326>
 
 根据上面的特征线方程,进行代入,可以得到很多结果,这些结果有些是平凡的,比如说$dif u=0$这一类,因为这很显然是$dif bold(u)=0$的必然结果.如果考察那些不是平凡的解,可以得到以下内容(具体推导从略):
 
-$ dif v = dif(p rho^(-gamma)) = dif u plus.minus a/rho dif rho =0 $
+$ dif v = dif(p rho^(-gamma)) = dif u plus.minus a/rho dif rho =0 $<3327>
 
 第一个是很显然的,就是另外一个方向上的速度守恒;第二个经过$dif p rho^(-gamma) arrow.double dif(C_V ln(p rho^(-gamma))) =dif S=0$,这是一个等熵流动;第三个则可以变形得到$dif(u plus.minus (2a)/(gamma-1))=0$,以上为4个Riemann不变量.
 
@@ -647,6 +647,12 @@ $ bold(alpha) = bold(W)^(-1) bold(U)^H bold(x_0) $<34210>
 $ bold(x)(t) = sum_j 2 |alpha_j| |bold(Phi_j)| e^(-zeta_j omega_(n,j) t) cos(omega_(d,h) t + phi_(alpha_j) +bold(phi_(Phi_j))) $<34211>
 
 这里将$alpha_j,bold(Phi_j)$全部角度化了,他们将作为相移的部分参与分析,正常情况下,我们只需要取这里能够增长的振动模态作为分析结果即可,也有人提出了考虑全局的算法@kou2017improved,当我们考虑有节律的流动失稳时,应当明确这是一个极限环(LCO),所以上面的衰减因子应为1.
+
+== 激波管:方程---格式---求解器链条
+
+
+
+
 
 
 
