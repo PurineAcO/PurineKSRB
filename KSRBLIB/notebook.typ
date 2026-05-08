@@ -372,9 +372,9 @@ $ (dif)/(dif t)|bold(J)| = (partial u)/(partial x) mat(delim:"|",(partial x)/(pa
 $ & underline((dif)/(dif t) integral_(Omega(t)) f dif V )= (dif)/(dif t) integral_(Omega_0) f |bold(J)| dif V_0 = integral_(Omega_0)  (dif)/(dif t) (f |bold(J)|) dif V_0 =integral_(Omega_0) |bold(J)|(dif f)/(dif t) + f (dif|bold(J)|)/(dif t) dif V_0 \ &= integral_(Omega_0) |bold(J)|((partial f)/(partial t) +bold(v) dot nabla f) + f (|bold(J)| nabla dot bold(v)) dif V_0 = integral_(Omega_0) |bold(J)|((partial f)/(partial t) + bold(v) dot nabla f + f nabla dot bold(v)) dif V_0  \ &= integral_(Omega_0) |bold(J)|((partial f)/(partial t) + nabla dot (f bold(v))) dif V_0  = underline(integral_(Omega (t)) ((partial f)/(partial t) + nabla  dot (f bold(v))) dif)  V $<3113>
 
 
-@3113 展示了Reynold输运方程,这个方程的关键点在于,一个区域内某个物理量的表观增加量,等于其内生的增加量和从边界流入的增加量之和(Guass).
+@3113 展示了Reynold输运方程,这个方程的关键点在于,一个区域内某个物理量的表观增加量,等于其内生的增加量和从边界流入的增加量之和(Gauss).
 
-== NS控制方程
+=== NS控制方程
 
 现在假设$f$代表密度$rho$,对于一个$Omega(t)$而言,流动中质量没有补充和亏损,那么上面@3113 左边项恒为0,不论此时流体被指定到哪一个位置.
 
@@ -420,7 +420,7 @@ $ partialer((rho C_v T +1/2 rho (u^2+v^2)),t)+partialer((rho u C_p T +1/2 rho u 
 
 
 
-@3114,@3119,@3119-1,@31110 总共提供了4个方程,但是产生了8个未知数,分别是$u,v,rho,T,tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$,为此,我们需要额外的方程去封闭他们.
+@3115,@3119,@3119-1,@31110 总共提供了4个方程,但是产生了8个未知数,分别是$u,v,rho,T,tau_(x x),tau_(x y),tau_(y y),lambda_"eff"$,为此,我们需要额外的方程去封闭他们.
 
 这里我们仅仅介绍少部分RANS的内容,简单来说,RANS将将求平均值视为稳态情况的时间平均以及可重复瞬态情况的整体平均,通过把上面的方程全部替换为一种平均意义上的结果,再加上一些湍流模型的修正,来解析整个流场.
 
@@ -496,6 +496,72 @@ $ D(tv) = (C_(w 1) f_(w) - (C_(b 1)/(kappa^2) )f_(t 2))(tv/d)^2 $<3314>
 
 $ C_(w 1) = (C_(b 1))/kappa^2 + (1+ C_(b 2))/sigma  $<3315>
 
+// TODO 继续把这个湍流模型写完
+
+== 压力远场
+
+本问题中大量使用了压力远场作为整个流场的边界条件,压力远场是一种很特殊的边界条件,其不区分具体的来流和出口,而是将整个要研究的部分置于一个*充分发展*的流动之中,因此模拟这部分流动就不能像速度入口一样将某几个具体的数据定死来完成,而需要采取一些高级的分析办法.
+
+=== Riemann不变量和特征线理论
+
+考虑一个方程:
+
+$ partialer(bold(u),t)+bold(A(u)) partialer(bold(u),x) = bold(0) $
+
+我们需要找到一个标量函数$W(bold(u))$,使得其沿着某个方向$gamma: x=x(t)$满足$(dif W)/(dif t)=0$,而
+
+$ (dif W)/(dif t) = partialer(W,t) + partialer(W,x) (dif x)/(dif t) =^Delta partialer(W,t) + lambda partialer(W,x)  $
+
+比较
+
+$ (dif W)/(dif t) &= nabla_bold(u) W dot ((dif bold(u))/(dif t)) = nabla_bold(u) W (partialer(bold(u),t) + partialer(bold(u),x) (dif x)/(dif t) ) \ &= nabla_bold(u) W dot (-bold(A)(bold(u)) + lambda bold(I) ) partialer(bold(u),x) $
+
+为了满足$(dif W)/(dif t) = 0$,就需要
+
+$ nabla_bold(u) W dot (bold(A(u))-lambda bold(I)) = 0 $
+
+也就是说
+
+$ (nabla_bold(u) W)^top (bold(A(u))-lambda bold(I)) = 0 $
+
+取转置得到
+
+$ bold(A^top (u)) nabla_bold(u) W = lambda bold(I) nabla_bold(u) W $
+
+也就是说$nabla_bold(u) W$平行于$bold(A^top (u))$的特征向量,也就是说,$nabla_bold(u) W$是$bold(A)$的*左特征向量*,这里需要补充的是,左特征值和右特征值是等同的,但是左特征向量和右特征向量并不是,*对于不同的特征值,其对应的左特征向量和右特征向量总是正交*,对于相同的特征值,则未必如此.(简单的线性代数问题,证明从略)
+
+这也就很好的阐述了Riemann不变量所对应的特征线的含义,在一个流场中存在很多族特征线,只有在这些特征线上,才会有Riemann不变量的存在,这种选择性正交的关系,很好的将不同的不变量分开.这也就得到了以下方程:
+
+$ (dif u_1)/(dif r_(i 1)) =(dif u_2)/(dif r_(i 2)) =(dif u_3)/(dif r_(i 3)) =(dif u_4)/(dif r_(i 4))  $
+
+=== 二维Euler方程的Riemann不变量
+
+下面考虑二维的Euler方程,我们先考虑$x$方向,在对称的替代$y$方向,实际上,在实际操作中,压力远场一般被布置成圆形,彼时考虑的应该是$n$和$tau$方向
+
+$ partialer(bold(u),t) + partialer(bold(F(u)),x) = partialer(,t)vec(rho,rho u,rho v,E) + partialer(,t)vec(rho u ,rho u^2 + p,rho u v,u(E+p)) =0 $
+
+其中$E = rho e+1/2 rho(u^2+v^2),p=(gamma-1)rho e$,我们记$bold(u) =(u_1,u_2,u_3,u_4)^top$,经过简单推导得到:
+
+$ cases(F_1 = u_2,F_2 = u_2^2/u_1+(gamma-1)(u_4-(u_2^2+u_3^2)/(2u_1)),F_3 = (u_2u_3)/(u_1),F_4 = u_2/u_1 (gamma u_4 - (gamma-1)(u_2^2+u_3^2)/(2u_1))) $
+
+进行求导得到:
+
+$ bold(A(u)) = mat(0,1,0,0;((gamma-3)u^2+(gamma-1)v^2)/2,(3-gamma)u,-(gamma-1)v,gamma-1;-u v,v,u,0;((gamma-2)(u^3+u v^2))/2-(u a^2)/(gamma-1),((3-2gamma)u^2+v^2)/2+a^2/(gamma-1),-(gamma-1)u v,gamma u)  $
+
+其中$a=(gamma p)/rho$为当地声速,特征值为$lambda_1=lambda_2=u,lambda_3=u+a,lambda_4=u-a$,对应的特征向量组成的矩阵$bold(R)$为:
+
+$ bold(R) = mat(2/(u^2-v^2),(-2v)/(u^2-v^2),(2gamma-2)/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2gamma-2)/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));(2u)/(u^2-v^2),(-2u v)/(u^2-v^2),(2(gamma-1)(u-a))/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2(gamma-1)(u+a))/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));0,1,(2(gamma-1)v)/(2a^2-2a(gamma-1)u+(gamma-1)(u^2+v^2)),(2(gamma-1)v)/(2a^2+2a(gamma-1)u+(gamma-1)(u^2+v^2));1,0,1,1)={r_(i j)} $
+
+根据上面的特征线方程,进行代入,可以得到很多结果,这些结果有些是平凡的,比如说$dif u=0$这一类,因为这很显然是$dif bold(u)=0$的必然结果.如果考察那些不是平凡的解,可以得到以下内容(具体推导从略):
+
+$ dif v = dif(p rho^(-gamma)) = dif u plus.minus a/rho dif rho =0 $
+
+第一个是很显然的,就是另外一个方向上的速度守恒;第二个经过$dif p rho^(-gamma) arrow.double dif(C_V ln(p rho^(-gamma))) =dif S=0$,这是一个等熵流动;第三个则可以变形得到$dif(u plus.minus (2a)/(gamma-1))=0$,以上为4个Riemann不变量.
+
+对于一般的仿真情形,压力远场边界条件通常被布置为一个半径超过20倍特征弦长的圆形,因此考虑$n$方向作为上面所提及的$u$速度,这只是坐标变换的问题,上面提到的垂直速度和熵的不变量,是随着流体运动本身而传播的,是一种相对普遍的守恒关系;而$u plus.minus (2a)/(gamma-1)$则是随着左、右行的声波进行传播,对应的是扰动的传递.
+
+
+
 == 后处理手段:本征正交分解和动态模态分解
 
 === 本征正交分解(POD)
@@ -514,7 +580,7 @@ $ bold(Sigma) = "diag"(bold(Sigma_0),bold(0)) = mat(mat(sigma_1;,sigma_2;,,...,;
 
 现在我们令以下最大值问题
 
-$ max_(tilde(u_1),tilde(u_2),...,tilde(u_ell) in RR^(m times 1)) sum_(i=1)^ell sum_(j=1)^n |chevron bold(y_j),bold(tilde(u)_i)  chevron.r|^2 , "s.t." chevron bold(tilde(u)_i tilde(u)_j) chevron.r = delta_(i j) $<3413>
+$ max_(tilde(u_1),tilde(u_2),...,tilde(u_ell) in RR^(m times 1)) sum_(i=1)^ell sum_(j=1)^n |chevron bold(y_j),bold(tilde(u)_i)  chevron.r|^2 , "s.t." chevron bold(tilde(u)_i), bold(tilde(u)_j) chevron.r = delta_(i j) $<3413>
 
 其中截断位置$ell in (1,d)$.@3413 可以简化成以下形式:
 
@@ -580,7 +646,7 @@ $ bold(alpha) = bold(W)^(-1) bold(U)^H bold(x_0) $<34210>
 
 $ bold(x)(t) = sum_j 2 |alpha_j| |bold(Phi_j)| e^(-zeta_j omega_(n,j) t) cos(omega_(d,h) t + phi_(alpha_j) +bold(phi_(Phi_j))) $<34211>
 
-这里将$alpha_j,bold(Phi_j)$全部角度化了,他们将作为相移的部分参与分析,正常情况下,我们只需要取这里能够增长的振动模态作为分析结果即可,也有人提出了考虑全局的算法@kou2017improved,当我们考虑有节律的流动失稳时,应当明确的时这是一个极限环(LCO),所以上面的衰减因子应为1.
+这里将$alpha_j,bold(Phi_j)$全部角度化了,他们将作为相移的部分参与分析,正常情况下,我们只需要取这里能够增长的振动模态作为分析结果即可,也有人提出了考虑全局的算法@kou2017improved,当我们考虑有节律的流动失稳时,应当明确这是一个极限环(LCO),所以上面的衰减因子应为1.
 
 
 
