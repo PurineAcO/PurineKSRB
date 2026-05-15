@@ -23,8 +23,8 @@ U = zeros(3,grid_num(1)+1, grid_num(2)+1);
 F = zeros(3,grid_num(1)+1, grid_num(2)+1);
 
 %% 1. Initialization
-u(:, 1) = (x_arr <= 0) * 0.75;                     
-p(:, 1) = (x_arr <= 0) * 1 + (x_arr > 0) * 0.1;     
+u(:, 1) = (x_arr <= 0) * 0.75;
+p(:, 1) = (x_arr <= 0) * 1 + (x_arr > 0) * 0.1;
 rho(:, 1) = (x_arr <= 0) * 1 + (x_arr > 0) * 0.125;
 
 % conserved variables U = [rho, rho*u, E]  (3 x Nx x Nt)
@@ -38,7 +38,7 @@ F(2, :, 1) = (rho(:, 1) .* u(:, 1).^2 + p(:, 1)).';
 F(3, :, 1) = (u(:, 1) .* (U(3, :, 1).' + p(:, 1))).';
 
 %% 2. Time marching
-a = CFL / 2;  
+a = CFL / 2;
 Nx = grid_num(1) + 1;
 
 for n = 1:grid_num(2)
@@ -98,47 +98,6 @@ plot(x_arr, internal_energy, 'Color', [1, 0.70, 0.50], 'LineWidth', 1.5);
 xlabel('$x$ (Spatial distribution)', 'Interpreter', 'latex');
 ylabel('$e$ (Internal energy)', 'Interpreter', 'latex');
 legend('Internal energy', 'Location', 'best');
-
-% 3.3 animation
-figure('Name', 'Animation');
-anim_frames = 1:20:size(u,2);
-
-for k = 1:length(anim_frames)
-    idx = anim_frames(k);
-
-    subplot(3,1,1);
-    plot(x_arr, u(:, idx), 'Color', [0.39, 0.58, 0.93], 'LineWidth', 1.5);
-    ylim([-0.1, 1.5]);
-    ylabel('Velocity ($u$)', 'Interpreter', 'latex');
-    title(sprintf('1D Sod shock tube in Lax-Friedrichs format ($t = %.3f$)', t_arr(idx)), ...
-          'Interpreter', 'latex');
-    legend('Velocity', 'Location', 'best');
-
-    subplot(3,1,2);
-    plot(x_arr, rho(:, idx), 'Color', [0.56, 0.93, 0.56], 'LineWidth', 1.5);
-    ylabel('Density ($\rho$)', 'Interpreter', 'latex');
-    legend('Density', 'Location', 'best');
-
-    subplot(3,1,3);
-    plot(x_arr, p(:, idx), 'Color', [1, 0.75, 0.80], 'LineWidth', 1.5);
-    xlabel('Space ($x$)', 'Interpreter', 'latex');
-    ylabel('Pressure ($p$)', 'Interpreter', 'latex');
-    legend('Pressure', 'Location', 'best');
-
-    drawnow;
-
-    % capture frame and save as GIF
-    frame = getframe(gcf);
-    im = frame2im(frame);
-    [imind, cm] = rgb2ind(im, 256);
-    if k == 1
-        imwrite(imind, cm, 'animation.gif', 'gif', 'Loopcount', inf, 'DelayTime', 0.01);
-    else
-        imwrite(imind, cm, 'animation.gif', 'gif', 'WriteMode', 'append', 'DelayTime', 0.01);
-    end
-end
-
-
 
 %% supplement 1: Lax-Friedrichs step function
 function [U_next, rho_next, u_next, p_next, F_next] = lax_freidrichs(U_curr, F_curr, gamma, a, Nx)
