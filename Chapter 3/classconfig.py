@@ -31,10 +31,11 @@ class node_class:
 
 class cell_class:
     def __init__(self,index):
-        self.index = index
-        self.x = 0        # cell center x
-        self.y = 0        # cell center y   
-        self.vol = 0      # cell volume(for 2D,it iterally means area)
+        self.index = index  # cell index (i,j)
+        self.x = 0          # cell center x
+        self.y = 0          # cell center y   
+        self.vol = 0        # cell volume(for 2D,it iterally means area)
+        self.sad = 0        # cell to wall distance
         self.rho = 0
         self.p = 0
         self.T = 0
@@ -51,4 +52,6 @@ class face_class:
     def __init__(self,index):
         self.index = index
         self.ni = 0        # normal direction n
-        self.nj = 0        # normal direction tau   
+        self.nj = 0        # normal direction tau
+        self.mx = 0        # middle point x
+        self.my = 0        # middle point y

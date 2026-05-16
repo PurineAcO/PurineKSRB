@@ -2,13 +2,11 @@ import numpy as np
 import classconfig as cc
 
 def read_mesh(meshfile):
-    """read the meshdata and return the number of 
-    points `i`,`j`, and **class list** `NodeList`.\n
-    you should give the `meshfile` as the path of the meshdata\n
-    and the meshdata should begin with a line of header which 
-    contains the num of the `i` and `j` \n
-    this case we should use n-direction number `i` and tau-direction number `j`  
-    to construct the meshgrid, then the `NodeList` is a 2D list of **class** `Node`
+    """
+    阅读**O型网格**,并将网格点信息存储在**class** `NodeList` 中.\n
+    网格文件的第一行应包含两个整数,分别表示环层数 `i_total` 和周向点数 `j_total`,
+    后续行包含每个网格点的x和y坐标,保证按照逆时针排列.\n
+    你既可以将末端封闭也可以不封闭.\n
     """
 
     with open(meshfile, 'r') as f:
@@ -32,9 +30,9 @@ def read_mesh(meshfile):
 
     readindex = 0
     # cc.NodeList = [[]]
-    for i in range(cc.i_total):
+    for i in range(1, cc.i_total + 1):
         circle = [[]]
-        for j in range(cc.j_total):
+        for j in range(1, cc.j_total + 1):
             tempnode = cc.node_class(readindex)
             tempnode.x = data[readindex, 0]
             tempnode.y = data[readindex, 1]
@@ -42,13 +40,29 @@ def read_mesh(meshfile):
             readindex += 1
         cc.NodeList.append(circle)
 
+    # examine if the mesh is closed
+    tol = 1e-12
+    closed = True
+    for i in range(1, cc.i_total + 1):
+        n1 = cc.NodeList[i][1]        # the first node of each ring
+        n_last = cc.NodeList[i][-1]   # the last node of each ring
+        if abs(n1.x - n_last.x) > tol or abs(n1.y - n_last.y) > tol:
+            # judge if the first and last node of each ring are the same (closed)
+            closed = False
+            break
+    if closed:
+        for i in range(1, cc.i_total + 1):
+            cc.NodeList[i].pop()       # remove the last node of each ring
+        cc.j_total -= 1
+        cc.meshcnt -= cc.i_total
+        print(f"Detected closed data, automatically corrected: j_total → {cc.j_total}, meshcnt → {cc.meshcnt}")
+
     print(f"successfully read {meshfile} with {cc.meshcnt} points.")
     print(f"i_total: {cc.i_total}, j_total: {cc.j_total}, meshcnt: {cc.meshcnt}")
 
 
 def mesh_visualization():
-    """visualize the meshdata and return the figure.\n
-    you should give the **class** `NodeList` """
+    """可视化网格点,以验证网格数据的正确性.\n"""
 
     x=[]; y=[]
     for i in range(len(cc.NodeList)):
@@ -63,7 +77,7 @@ def mesh_visualization():
 
     plt.xlabel('X Coordinate', fontsize=12)
     plt.ylabel('Y Coordinate', fontsize=12)
-    plt.title('Grid Points Visualization (yuanzhudata.txt)', fontsize=14)
+    plt.title('Grid Points Visualization', fontsize=14)
     plt.grid(True, linestyle='--', alpha=0.3)
     plt.axis('equal')
 

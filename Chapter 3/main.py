@@ -2,10 +2,6 @@ import meshreading as mr
 import geometry as geo
 import classconfig as cc
 
-mr.read_mesh("yuanzhudata.txt")
+mr.read_mesh("fangdata.txt")
 
-geo.calc_cell_vol()
-
-geo.calc_cell_center()
-
-geo.geometry_debug()
+geo.geometry_main("1.txt", ifrender=True)
