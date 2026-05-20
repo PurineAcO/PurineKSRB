@@ -22,6 +22,10 @@ CellList = [[]]
 FaceList_n = [[]]
 Facelist_tau = [[]]
 
+# output file
+outputfile = "output.txt"
+
+
 #area for the class definition
 class node_class:
     def __init__(self,index):
@@ -47,6 +51,8 @@ class cell_class:
         self.ma = 0
         self.miu = 0
         self.miubl = 0
+        self.U = [0,0,0,0,0,0] # conservative variables
+        self.U_former = [0,0,0,0,0,0] # former conservative variables
 
 class face_class:
     def __init__(self,index):
@@ -55,3 +61,7 @@ class face_class:
         self.nj = 0        # normal direction tau
         self.mx = 0        # middle point x
         self.my = 0        # middle point y
+
+# some temp variables
+
+density_table = np.zeros((i_total+1,j_total+1))

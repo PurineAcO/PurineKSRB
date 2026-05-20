@@ -1,5 +1,6 @@
 import numpy as np
 import classconfig as cc
+import output as ot
 
 def calc_cell_vol():
     """新建网格类,计算每个单元的体积,并存储在`CellList` 中.\n"""
@@ -133,131 +134,20 @@ def calc_most_near_walldistance():
                     min_dist = dist
             cell.sad = min_dist
 
-def geometry_debug(debugoutput):
-    with open(debugoutput,'w') as f:
-        for i in range(1,cc.i_total,1):
-            for j in range(1,cc.j_total+1,1):
-                cell = cc.CellList[i][j]
-                f.write(f"cell index: ({i},{j}), cell volume: {cell.vol}\n")
-                f.write(f"cell center: ({cell.x}, {cell.y})\n")
-                f.write(f"most near wall distance: {cell.sad}\n")
-                f.write("-------------------------------------\n")
-
-        for i in range(1,cc.i_total+1,1):
-            for j in range(1,cc.j_total+1,1):
-                face_tau = cc.Facelist_tau[i][j]
-                f.write(f"face_tau index: ({i},{j}), normal vector: ({face_tau.ni}, {face_tau.nj})\n")
-                f.write(f"face_tau middle point: ({face_tau.mx}, {face_tau.my})\n")
-                f.write("-------------------------------------\n")
-
-        for j in range(1, cc.j_total + 1):
-            for i in range(1, cc.i_total):
-                face_n = cc.FaceList_n[j][i]
-                f.write(f"face_n index: ({i},{j}), normal vector: ({face_n.ni}, {face_n.nj})\n")
-                f.write(f"face_n middle point: ({face_n.mx}, {face_n.my})\n")
-                f.write("-------------------------------------\n")
-
-def mesh_visualization(savepath=None, show_centers=True, show_tau=True, show_n=True):
-    """可视化网格,如果不指定保存路径`savepath`则直接显示图像.\n
-    用参数`show_centers`控制是否显示单元中心.用参数`show_tau`和`show_n`控制显示周向/径向法向."""
-    import matplotlib.pyplot as plt
-    import os
-
-    fig, ax = plt.subplots(figsize=(10, 10), dpi=120)
-
-    # circumferential lines (constant i)
-    for i in range(1, cc.i_total + 1):
-        xs, ys = [], []
-        for j in range(1, cc.j_total + 1):
-            xs.append(cc.NodeList[i][j].x)
-            ys.append(cc.NodeList[i][j].y)
-        xs.append(cc.NodeList[i][1].x)
-        ys.append(cc.NodeList[i][1].y)
-        ax.plot(xs, ys, color='steelblue', linewidth=0.8, alpha=0.8)
-
-    # radial lines (constant j)
-    for j in range(1, cc.j_total + 1):
-        xs, ys = [], []
-        for i in range(1, cc.i_total + 1):
-            xs.append(cc.NodeList[i][j].x)
-            ys.append(cc.NodeList[i][j].y)
-        ax.plot(xs, ys, color='steelblue', linewidth=0.8, alpha=0.8)
-
-    # domain extent for auto-scaling arrows
-    outer = cc.i_total
-    xs_outer = [cc.NodeList[outer][j].x for j in range(1, cc.j_total + 1)]
-    ys_outer = [cc.NodeList[outer][j].y for j in range(1, cc.j_total + 1)]
-    domain_size = max(max(xs_outer) - min(xs_outer), max(ys_outer) - min(ys_outer))
-    arrow_scale = domain_size * 0.03
-    arrow_width = domain_size * 0.0003
-
-    # subsample target: ~15 arrows per direction
-    skip_i = max(1, (cc.i_total + 14) // 15)
-    skip_j = max(1, (cc.j_total + 14) // 15)
-
-    # cell centers
-    if show_centers:
-        cx, cy = [], []
-        for i in range(1, cc.i_total):
-            for j in range(1, cc.j_total + 1):
-                cx.append(cc.CellList[i][j].x)
-                cy.append(cc.CellList[i][j].y)
-        ax.scatter(cx, cy, c='crimson', s=18, zorder=5, label='cell center')
-
-    # face_tau normals (circumferential edge → radial outward)
-    if show_tau:
-        tx, ty, tni, tnj = [], [], [], []
-        for i in range(1, cc.i_total + 1, skip_i):
-            for j in range(1, cc.j_total + 1, skip_j):
-                jn = j + 1 if j < cc.j_total else 1
-                mx = (cc.NodeList[i][j].x + cc.NodeList[i][jn].x) * 0.5
-                my = (cc.NodeList[i][j].y + cc.NodeList[i][jn].y) * 0.5
-                tx.append(mx); ty.append(my)
-                tni.append(cc.Facelist_tau[i][j].ni)
-                tnj.append(cc.Facelist_tau[i][j].nj)
-        ax.quiver(tx, ty, tni, tnj, color='darkcyan', scale=1/arrow_scale,
-                  scale_units='xy', width=arrow_width, zorder=6, label='face_tau normal')
-
-    # face_n normals (radial edge → circumferential)
-    if show_n:
-        nx, ny, nni, nnj = [], [], [], []
-        for j in range(1, cc.j_total + 1, skip_j):
-            for i in range(1, cc.i_total, skip_i):
-                mx = (cc.NodeList[i][j].x + cc.NodeList[i+1][j].x) * 0.5
-                my = (cc.NodeList[i][j].y + cc.NodeList[i+1][j].y) * 0.5
-                nx.append(mx); ny.append(my)
-                nni.append(cc.FaceList_n[j][i].ni)
-                nnj.append(cc.FaceList_n[j][i].nj)
-        ax.quiver(nx, ny, nni, nnj, color='darkorange', scale=1/arrow_scale,
-                  scale_units='xy', width=arrow_width, zorder=6, label='face_n normal')
-
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title(f'O mesh — {cc.i_total} rings x {cc.j_total} radial points')
-    ax.set_aspect('equal')
-    if ax.get_legend_handles_labels()[0]:
-        ax.legend()
-    ax.grid(True, linestyle='--', alpha=0.3)
-
-    if savepath:
-        fig.savefig(savepath, dpi=150, bbox_inches='tight')
-        print(f'mesh visualization saved to: {os.path.abspath(savepath)}')
-    else:
-        plt.show()
-    plt.close(fig)
-
 def geometry_main(debugoutput, ifrender=False, showwhat=(True, True, True)):
+    """几何结构的初始化,共包含以下步骤:\n
+    (1)计算单元体积和中心;(2)计算周向\径向网格的边的法向量;\n 
+    (3)计算每个单元中心到壁面的最近距离.\n 
+    `ifrender` 控制是否进行网格可视化,\n 
+    `showwhat` 是一个三元组,分别控制显示单元中心、周向法向、径向法向."""
     calc_cell_vol()
     calc_cell_center()
     calc_face_direction_tau()
     calc_face_direction_n()
     calc_most_near_walldistance()
-    geometry_debug(debugoutput)
+    ot.geometry_debug(debugoutput)
     if ifrender:
-        mesh_visualization("mesh_visual.svg",
+        ot.mesh_visualization("mesh_visual.svg",
                            show_centers=showwhat[0],
                            show_tau=showwhat[1],
                            show_n=showwhat[2])
-
-
-
