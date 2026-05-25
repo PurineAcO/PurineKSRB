@@ -5,19 +5,36 @@ U-g 法机翼颤振求解 —— 展长敏感性分析（单文件版）
 import numpy as np
 from scipy.special import j0, j1, y0, y1
 import matplotlib.pyplot as plt
+import json
+import os
 
 # ============================================================
-# 1. 参数
+# 1. 参数（从 JSON 读取）
 # ============================================================
-b, a = 0.1, -0.5
-m, S, I_alpha = 1.85, 0.0309, 3.142e-3
-k_w, k_alpha = 2542.0, 2.512
-rho = 1.225
+_json_path = os.path.join(os.path.dirname(__file__), 'input_params.json')
+with open(_json_path, 'r', encoding='utf-8') as _f:
+    params = json.load(_f)
 
-M = np.array([[m, S], [S, I_alpha]])
-K = np.array([[k_w, 0.0], [0.0, k_alpha]])
+    b       = params['b']
+    a       = params['a']
+    m       = params['m']
+    S       = params['S']
+    I_alpha = params['I_alpha']
+    k_w     = params['k_w']
+    k_alpha = params['k_alpha']
+    rho     = params['rho']
 
-k_array = np.arange(0.02, 3.0 + 0.005, 0.005)
+    M = np.array([[m, S], [S, I_alpha]])
+    K = np.array([[k_w, 0.0], [0.0, k_alpha]])
+
+    k_start = params['k_start']
+    k_end   = params['k_end']
+    k_step  = params['k_step']
+    k_array = np.arange(k_start, k_end + k_step, k_step)
+
+    span_list = params['span_list']
+    REF_raw   = params['REF']
+    REF       = {float(k): v for k, v in REF_raw.items()}
 
 # ============================================================
 # 2. Theodorsen 函数 C(k) = F(k) + i G(k)
@@ -135,13 +152,11 @@ def solve_span(l_span):
 # 5. 主程序：展长遍历 + 双图可视化
 # ============================================================
 def main():
-    span_list = [0.1, 0.2, 0.3, 0.4, 0.5]
-    REF = {0.1: 27.8, 0.2: 19.6, 0.3: 15.6, 0.4: 13.1, 0.5: 11.5}
     all_data = {}  # l → (branches, flutter_pts)
 
     print("=" * 60)
     print("  U-g 法颤振求解 —— 展长敏感性分析")
-    print(f"  b={b}, a={a}, ρ={rho}")
+    print(f"  b={b}, a={a}, density={rho}")
     print(f"  k ∈ [{k_array[0]}, {k_array[-1]}], Δk={k_array[1]-k_array[0]:.4f}")
     print("=" * 60)
 
@@ -151,27 +166,32 @@ def main():
         all_data[l_val] = (branches, pts)
         if pts:
             for Uf, kf, label in pts:
-                print(f"  颤振点: U_f = {Uf:.2f} m/s  (k = {kf:.4f}, {label})")
+                omega_f = kf * Uf / b
+                f_f = omega_f / (2 * np.pi)
+                print(f"  颤振点: U_f = {Uf:.2f} m/s  (k = {kf:.4f}, f = {f_f:.3f} Hz, {label})")
         else:
             print("  未检测到 g=0 穿越")
 
     print("\n" + "=" * 60)
-    print(f"{'展长 [m]':>8}  {'计算 [m/s]':>12}  {'文献 [m/s]':>12}  {'误差':>8}")
-    print("-" * 48)
+    print(f"{'展长 [m]':>8}  {'计算 [m/s]':>12}  {'文献 [m/s]':>12}  {'误差':>8}  {'f_f [Hz]':>10}")
+    print("-" * 58)
     l_vals, U_vals = [], []
     for l_val in span_list:
         _, pts = all_data[l_val]
         if pts:
             Uf = min(p[0] for p in pts)
+            kf = [p[1] for p in pts if abs(p[0]-Uf)<0.01][0]
+            omega_f = kf * Uf / b
+            f_f = omega_f / (2 * np.pi)
             l_vals.append(l_val); U_vals.append(Uf)
             err = (Uf - REF[l_val]) / REF[l_val] * 100
-            print(f"{l_val:>8.1f}  {Uf:>12.2f}  {REF[l_val]:>12.1f}  {err:>+7.1f}%")
+            print(f"{l_val:>8.1f}  {Uf:>12.2f}  {REF[l_val]:>12.1f}  {err:>+7.1f}%  {f_f:>10.3f}")
     print("=" * 60)
 
     # ---- 输出数据到 txt ----
     with open('ug_flutter_data.txt', 'w', encoding='utf-8') as f:
         f.write("U-g 法机翼颤振求解 —— 数据输出\n")
-        f.write(f"b={b}, a={a}, ρ={rho}, k∈[{k_array[0]},{k_array[-1]}], Δk={k_array[1]-k_array[0]:.4f}\n")
+        f.write(f"b={b}, a={a}, density={rho}, k∈[{k_array[0]},{k_array[-1]}], Δk={k_array[1]-k_array[0]:.4f}\n")
         f.write("=" * 70 + "\n\n")
 
         f.write("第一部分：各展长下的 U, g 坐标\n")
@@ -187,17 +207,19 @@ def main():
                 for k, g, U in valid:
                     f.write(f"  {k:.5f}  {g:+.6f}  {U:.4f}\n")
 
-        f.write("\n\n第二部分：各展长下的颤振速度\n")
+        f.write("\n\n第二部分：各展长下的颤振速度与频率\n")
         f.write("-" * 70 + "\n")
-        f.write(f"{'展长 [m]':>10}  {'U_f [m/s]':>12}  {'k_f':>10}  {'文献 [m/s]':>12}  {'误差':>8}\n")
-        f.write("-" * 58 + "\n")
+        f.write(f"{'展长 [m]':>10}  {'U_f [m/s]':>12}  {'k_f':>10}  {'f_f [Hz]':>10}  {'文献 [m/s]':>12}  {'误差':>8}\n")
+        f.write("-" * 70 + "\n")
         for l_val in span_list:
             _, pts = all_data[l_val]
             if pts:
                 Uf = min(p[0] for p in pts)
                 kf = [p[1] for p in pts if abs(p[0]-Uf)<0.01][0]
+                omega_f = kf * Uf / b
+                f_f = omega_f / (2 * np.pi)
                 err = (Uf - REF[l_val]) / REF[l_val] * 100
-                f.write(f"{l_val:>10.1f}  {Uf:>12.3f}  {kf:>10.4f}  {REF[l_val]:>12.1f}  {err:>+7.1f}%\n")
+                f.write(f"{l_val:>10.1f}  {Uf:>12.3f}  {kf:>10.4f}  {f_f:>10.3f}  {REF[l_val]:>12.1f}  {err:>+7.1f}%\n")
         f.write("-" * 58 + "\n")
 
     print("数据已输出: ug_flutter_data.txt")
@@ -216,7 +238,7 @@ def main():
         ax1.annotate(f'{REF[lv]:.1f}', (lv, REF[lv]), xytext=(0, 10), textcoords='offset points', ha='center', fontsize=9, color='#d62728')
     ax1.set_xlabel('机翼展长 $l$ [m]', fontsize=13)
     ax1.set_ylabel('颤振速度 $U_f$ [m/s]', fontsize=13)
-    ax1.set_title(f'展长对颤振速度的影响 ($b={b}$ m, $a={a}$, ρ={rho} kg/m$^3$)', fontsize=14)
+    ax1.set_title(f'展长对颤振速度的影响 ($b={b}$ m, $a={a}$, density={rho} kg/m$^3$)', fontsize=14)
     ax1.legend(fontsize=11)
     ax1.grid(alpha=0.3)
     fig1.tight_layout()
