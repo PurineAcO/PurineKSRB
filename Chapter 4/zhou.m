@@ -1,11 +1,12 @@
-%% zhou.m
-% 读取 merged_coefficients.txt 中的 CL/CD/CM 时程数据
-% 使用 JSON 中新增的 Ma、U_inf（Re=3e6），展长固定 0.2 m
-% （1）单时间点应力分析  （2）σ_r4,max—时间可视化  （3）全局最大相当应力
+%% ga_optimize.m
+% 遗传算法优化传动轴尺寸 (d_1, d_2, l_1, l_2)
+% 约束: σ_r4,max < 90 MPa, l_1+l_2=0.2 m, d<80 mm
+% 目标: min (0.7*V_norm + 0.3*σ_norm)
 
 clear; clc;
 
-%% ===== 1. 读取 JSON 参数 =====
+%% ===== 1. 读取全局数据（与设计变量无关的部分）=====
+% JSON
 try
     json_path = fullfile(fileparts(mfilename('fullpath')), 'input_params.json');
 catch
@@ -16,194 +17,158 @@ raw = fread(fid, inf, 'uint8=>char')';
 fclose(fid);
 params = jsondecode(raw);
 
-b     = params.b;          % 半弦长 [m]
-rho   = params.rho;        % 空气密度 [kg/m³]
-c     = 2 * b;             % 弦长 [m]
-Ma    = params.Ma;         % 马赫数
-U_inf = params.U_inf;      % 来流速度（Re=3e6 对应）[m/s]
-span  = 0.2;               % 展长固定 [m]
+b     = params.b;
+rho   = params.rho;
+c     = 2 * b;
+U_inf = params.U_inf;
+span  = 0.2;
 
-%% ===== 2. 读取 merged_coefficients.txt =====
-data = readmatrix('merged_coefficients.txt', 'FileType', 'text', 'NumHeaderLines', 4);
-t_all = data(:, 1);    % 流动时间 [s]
-CL_all = data(:, 2);
-CD_all = data(:, 3);
-CM_all = data(:, 4);
-n_t = length(t_all);
+% CFD 时程系数
+coeff_data = readmatrix('merged_coefficients.txt', 'FileType', 'text', 'NumHeaderLines', 4);
+CL_all = coeff_data(:, 2);
+CD_all = coeff_data(:, 3);
+CM_all = coeff_data(:, 4);
 
-%% ===== 3. 轴段参数 & 截面模量（常数）=====
-d_1 = 100e-3;       % 轴段1直径 [m]
-d_2 = 100e-3;       % 轴段2直径 [m]
-l_1 = 0.2;          % 轴段1长度 [m]
-l_2 = 0.2;          % 轴段2长度 [m]
+% 与设计变量无关的常量
+S_wing = span * c;
+q_dyn  = 0.5 * rho * U_inf^2;
+L_all = q_dyn * S_wing * CL_all;
+D_all = q_dyn * S_wing * CD_all;
+M_all = q_dyn * S_wing * c * CM_all;
 
-W_p1 = pi * d_1^3 / 16;     % 抗扭截面模量 [m³]
-W_p2 = pi * d_2^3 / 16;
-W_1  = pi * d_1^3 / 32;     % 抗弯截面模量 [m³]
-W_2  = pi * d_2^3 / 32;
+%% ===== 2. GA 设置 =====
+% 设计变量: [d_1, d_2, l_1],  l_2 = 0.2 - l_1
+% 单位: m
+lb = [0.010, 0.010, 0.02];    % 下限
+ub = [0.080, 0.080, 0.18];    % 上限 (<80mm, l_1<0.2)
 
-%% ===== 4. 全时程应力计算（向量化）=====
-S = span * c;                      % 机翼面积 [m²]
-q = 0.5 * rho * U_inf^2;           % 动压 [Pa]
+nvars = 3;
 
-% 气动力
-L_all = q * S * CL_all;
-D_all = q * S * CD_all;
-M_all = q * S * c * CM_all;
+% 参考值（用于归一化）
+V_ref  = pi * 0.1^2 * 0.2 + pi * 0.1^2 * 0.2;  % 初始设计体积 [m³]
+sig_ref = 90e6;                                   % 约束上限 [Pa]
 
-% 传动轴载荷
-T_all = M_all;                                  % 扭矩
-M_x_all = L_all * (span / 2);                   % 翼根 x弯矩
-M_y_all = D_all * (span / 2);                   % 翼根 y弯矩
+% GA 选项
+opts = optimoptions('ga', ...
+    'PopulationSize', 100, ...
+    'MaxGenerations', 80, ...
+    'Display', 'iter', ...
+    'PlotFcn', @gaplotbestf, ...
+    'UseParallel', false);
 
-% 截面弯矩
-M_x1_all = L_all * (span/2 + l_1/2);
-M_y1_all = D_all * (span/2 + l_1/2);
-M_x2_all = L_all * (span/2 + l_1 + l_2/2);
-M_y2_all = D_all * (span/2 + l_1 + l_2/2);
-
-% 截面应力
-sigma_x1_all = M_x1_all / W_1;
-sigma_y1_all = M_y1_all / W_1;
-sigma_x2_all = M_x2_all / W_2;
-sigma_y2_all = M_y2_all / W_2;
-tau_1_all    = T_all / W_p1;
-tau_2_all    = T_all / W_p2;
-
-% 辅助角公式 → 最大等效应力
-A_1_all = sqrt(sigma_x1_all.^2 + sigma_y1_all.^2);
-A_2_all = sqrt(sigma_x2_all.^2 + sigma_y2_all.^2);
-
-sigma_r4_max_1_all = sqrt(A_1_all.^2 + 3 * tau_1_all.^2) / 1e6;  % [MPa]
-sigma_r4_max_2_all = sqrt(A_2_all.^2 + 3 * tau_2_all.^2) / 1e6;
-
-% 最大应力对应角度
-phi_1_all = atan2d(sigma_y1_all, sigma_x1_all);
-phi_2_all = atan2d(sigma_y2_all, sigma_x2_all);
-theta_max_1_all = 90 - phi_1_all;
-theta_max_2_all = 90 - phi_2_all;
-
-%% ===== 5. (1) 单时间点应力分析 (t = 0.5 s) =====
-t_target = 0.5;
-[~, idx_t] = min(abs(t_all - t_target));
-t_sel = t_all(idx_t);
-
-CL_sel = CL_all(idx_t);  CD_sel = CD_all(idx_t);  CM_sel = CM_all(idx_t);
-L_sel  = q * S * CL_sel;
-D_sel  = q * S * CD_sel;
-M_sel  = q * S * c * CM_sel;
+% 包装适应度函数，传入预计算数据
+obj_fun = @(x) fitness_func(x, L_all, D_all, M_all, span, V_ref, sig_ref);
 
 fprintf('============================================================\n');
-fprintf('  (1) 单时间点应力分析: t = %.4f s\n', t_sel);
+fprintf('  遗传算法优化 — 传动轴尺寸\n');
+fprintf('  设计变量: d_1, d_2, l_1  (l_2 = 0.2 - l_1)\n');
+fprintf('  约束: sigma_r4,max < 90 MPa,  d < 80 mm\n');
+fprintf('  目标: min (0.7*V/V0 + 0.3*sigma/90MPa)\n');
 fprintf('============================================================\n');
-fprintf('  CL=%.4f,  CD=%.4f,  CM=%.4f\n', CL_sel, CD_sel, CM_sel);
-fprintf('  L=%.3f N, D=%.4f N, M=%.4f N·m\n', L_sel, D_sel, M_sel);
+
+%% ===== 3. 运行 GA =====
+rng(42);  % 固定随机种子以便复现
+[x_opt, fval_opt, exitflag, output] = ga(obj_fun, nvars, [], [], [], [], lb, ub, [], opts);
+
+%% ===== 4. 结果输出 =====
+d1_opt = x_opt(1);
+d2_opt = x_opt(2);
+l1_opt = x_opt(3);
+l2_opt = 0.2 - l1_opt;
+
+V_opt  = pi * d1_opt^2 * l1_opt + pi * d2_opt^2 * l2_opt;
+sig_opt = compute_global_sigma(d1_opt, d2_opt, l1_opt, l2_opt, L_all, D_all, M_all, span);
+
+fprintf('\n');
+fprintf('============================================================\n');
+fprintf('  优化结果\n');
+fprintf('============================================================\n');
+fprintf('  设计变量:\n');
+fprintf('    d_1 = %.2f mm\n', d1_opt*1e3);
+fprintf('    d_2 = %.2f mm\n', d2_opt*1e3);
+fprintf('    l_1 = %.3f m\n', l1_opt);
+fprintf('    l_2 = %.3f m  (= 0.2 - l_1)\n', l2_opt);
 fprintf('------------------------------------------------------------\n');
-fprintf('  截面1: sigma_{r4,max}=%.3f MPa  @ theta=%.1f deg\n', ...
-    sigma_r4_max_1_all(idx_t), theta_max_1_all(idx_t));
-fprintf('  截面2: sigma_{r4,max}=%.3f MPa  @ theta=%.1f deg\n', ...
-    sigma_r4_max_2_all(idx_t), theta_max_2_all(idx_t));
+fprintf('  目标:\n');
+fprintf('    体积 V      = %.4e m³  (初始: %.4e m³, 减少 %.1f%%)\n', ...
+    V_opt, V_ref, (1 - V_opt/V_ref)*100);
+fprintf('    全局 max σ  = %.2f MPa  (约束: < 90 MPa)\n', sig_opt/1e6);
+fprintf('------------------------------------------------------------\n');
+fprintf('  约束检查:\n');
+fprintf('    σ < 90 MPa:  %s\n', iif(sig_opt < 90e6, '✓ 满足', '✗ 违反'));
+fprintf('    l_1+l_2=0.2:  %s  (%.4f)\n', iif(abs(l1_opt+l2_opt-0.2)<1e-9, '✓ 满足', '✗ 违反'), l1_opt+l2_opt);
+fprintf('    d_1 < 80 mm:  %s  (%.1f mm)\n', iif(d1_opt<0.08, '✓ 满足', '✗ 违反'), d1_opt*1e3);
+fprintf('    d_2 < 80 mm:  %s  (%.1f mm)\n', iif(d2_opt<0.08, '✓ 满足', '✗ 违反'), d2_opt*1e3);
 fprintf('============================================================\n');
 
-%% ===== 6. (2) 可视化: sigma_r4,max 随时间变化 =====
-figure('Name', '最大等效应力-时间曲线', 'Position', [100, 100, 900, 400]);
-
-plot(t_all, sigma_r4_max_1_all, 'b-', 'LineWidth', 1.2, ...
-    'DisplayName', '截面1');
-hold on;
-plot(t_all, sigma_r4_max_2_all, 'r--', 'LineWidth', 1.2, ...
-    'DisplayName', '截面2');
-xlabel('流动时间 [s]', 'FontSize', 12);
-ylabel('\sigma_{r4, max} [MPa]', 'FontSize', 12);
-title('最大等效应力随时间变化', 'FontSize', 14);
-legend('Location', 'best', 'FontSize', 11);
-grid on;
-saveas(gcf, 'sigma_r4_vs_time.png');
-fprintf('\nFigure saved: sigma_r4_vs_time.png\n');
-
-%% ===== 7. 绘图: 单点 theta-sigma 曲线 (t = 0.5 s) =====
-theta = linspace(0, 2*pi, 360);
-theta_deg = rad2deg(theta);
-
-sigma_theta_1 = A_1_all(idx_t) * sin(theta + deg2rad(phi_1_all(idx_t)));
-sigma_r4_1    = sqrt(sigma_theta_1.^2 + 3 * tau_1_all(idx_t)^2);
-sigma_theta_2 = A_2_all(idx_t) * sin(theta + deg2rad(phi_2_all(idx_t)));
-sigma_r4_2    = sqrt(sigma_theta_2.^2 + 3 * tau_2_all(idx_t)^2);
-
-figure('Name', '圆轴边缘应力分布', 'Position', [100, 100, 900, 600]);
-subplot(2, 1, 1);
-plot(theta_deg, sigma_theta_1/1e6, 'b-', 'LineWidth', 1.5, ...
-    'DisplayName', sprintf('截面1 (tau=%.2f MPa)', tau_1_all(idx_t)/1e6));
-hold on;
-plot(theta_deg, sigma_theta_2/1e6, 'r--', 'LineWidth', 1.5, ...
-    'DisplayName', sprintf('截面2 (tau=%.2f MPa)', tau_2_all(idx_t)/1e6));
-yline(0, 'k-', 'LineWidth', 0.8, 'Alpha', 0.5);
-xlabel('角度 \theta [°]', 'FontSize', 12);
-ylabel('正应力 \sigma [MPa]', 'FontSize', 12);
-title(sprintf('\\sigma(\\theta) @ t=%.4f s', t_sel), 'FontSize', 13);
-legend('Location', 'best', 'FontSize', 10);
-grid on;  xlim([0, 360]);
-
-subplot(2, 1, 2);
-plot(theta_deg, sigma_r4_1/1e6, 'b-', 'LineWidth', 1.5, ...
-    'DisplayName', sprintf('截面1  max=%.2f MPa', max(sigma_r4_1)/1e6));
-hold on;
-plot(theta_deg, sigma_r4_2/1e6, 'r--', 'LineWidth', 1.5, ...
-    'DisplayName', sprintf('截面2  max=%.2f MPa', max(sigma_r4_2)/1e6));
-xlabel('角度 \theta [°]', 'FontSize', 12);
-ylabel('\sigma_{r4} [MPa]', 'FontSize', 12);
-title('\sigma_{r4}(\theta) = \surd(\sigma^2 + 3\tau^2)', 'FontSize', 13);
-legend('Location', 'best', 'FontSize', 10);
-grid on;  xlim([0, 360]);
-
-sgtitle(sprintf('圆轴边缘应力分布 (@ t=%.4f s)', t_sel), 'FontSize', 15);
-saveas(gcf, 'stress_theta.png');
-fprintf('Figure saved: stress_theta.png\n');
-
-%% ===== 8. (3) 全局最大相当应力（时间+空间）=====
-sigma_r4_combined = [sigma_r4_max_1_all; sigma_r4_max_2_all];
-[global_max, global_idx] = max(sigma_r4_combined);
-
-if global_idx <= n_t
-    sec = 1;  time_idx = global_idx;
-else
-    sec = 2;  time_idx = global_idx - n_t;
-end
+% 与初始设计对比
+d1_0 = 0.100;  d2_0 = 0.100;  l1_0 = 0.2;  l2_0 = 0.2;
+V_0  = pi * d1_0^2 * l1_0 + pi * d2_0^2 * l2_0;
+sig_0 = compute_global_sigma(d1_0, d2_0, l1_0, l2_0, L_all, D_all, M_all, span);
 
 fprintf('\n============================================================\n');
-fprintf('  (3) 全局最大相当应力（时间+空间）\n');
+fprintf('  与初始设计对比\n');
 fprintf('============================================================\n');
-fprintf('  sigma_{r4, global max} = %.4f MPa\n', global_max);
-fprintf('  所在截面: %d\n', sec);
-fprintf('  对应时间: t = %.4f s\n', t_all(time_idx));
-fprintf('  对应角度: theta = %.1f deg\n', ...
-    iif(sec==1, theta_max_1_all(time_idx), theta_max_2_all(time_idx)));
-fprintf('  对应 CL=%.4f, CD=%.4f, CM=%.4f\n', ...
-    CL_all(time_idx), CD_all(time_idx), CM_all(time_idx));
-fprintf('------------------------------------------------------------\n');
-% 空间位置
-if sec == 1
-    x_pos = span/2 + l_1/2;
-else
-    x_pos = span/2 + l_1 + l_2/2;
-end
-theta_g = iif(sec==1, theta_max_1_all(time_idx), theta_max_2_all(time_idx));
-% 判断方位
-if theta_g < 45 || theta_g > 315
-    side_str = '侧边(阻力方向)';
-elseif theta_g < 135
-    side_str = '顶部(升力正方向)';
-elseif theta_g < 225
-    side_str = '另一侧(-阻力方向)';
-else
-    side_str = '底部(升力负方向)';
-end
-fprintf('  空间位置:\n');
-fprintf('    距翼根 x = %.2f m  (截面%d中心)\n', x_pos, sec);
-fprintf('    周向 theta = %.1f deg  →  %s\n', theta_g, side_str);
+fprintf('  %12s  %8s  %8s  %10s  %10s\n', 'd_1[mm]', 'd_2[mm]', 'l_1[m]', 'V[m³]', 'σ[MPa]');
+fprintf('  --------------------------------------------------\n');
+fprintf('  初始:  %8.1f  %8.1f  %8.2f  %10.4e  %10.2f\n', ...
+    d1_0*1e3, d2_0*1e3, l1_0, V_0, sig_0/1e6);
+fprintf('  优化:  %8.1f  %8.1f  %8.2f  %10.4e  %10.2f\n', ...
+    d1_opt*1e3, d2_opt*1e3, l1_opt, V_opt, sig_opt/1e6);
 fprintf('============================================================\n');
 
 fprintf('\n===== Done =====\n');
+
+
+%% ===== 适应度函数 =====
+function f = fitness_func(x, L_all, D_all, M_all, span, V_ref, sig_ref)
+    d1 = x(1);  d2 = x(2);  l1 = x(3);
+    l2 = 0.2 - l1;
+
+    % 体积
+    V = pi * d1^2 * l1 + pi * d2^2 * l2;
+
+    % 全局最大相当应力 [Pa]
+    sig = compute_global_sigma(d1, d2, l1, l2, L_all, D_all, M_all, span);
+
+    % 归一化 + 加权 (7:3)
+    f = 0.7 * (V / V_ref) + 0.3 * (sig / sig_ref);
+
+    % 约束惩罚: σ > 90 MPa 或 l2 <= 0
+    if sig > sig_ref || l2 <= 0
+        f = f + 100;   % 大惩罚
+    end
+end
+
+%% ===== 全局最大应力计算 =====
+function sig_max = compute_global_sigma(d1, d2, l1, l2, L_all, D_all, M_all, span)
+    % 截面模量
+    W_p1 = pi * d1^3 / 16;
+    W_p2 = pi * d2^3 / 16;
+    W_1  = pi * d1^3 / 32;
+    W_2  = pi * d2^3 / 32;
+
+    % 截面弯矩
+    M_x1 = L_all * (span/2 + l1/2);
+    M_y1 = D_all * (span/2 + l1/2);
+    M_x2 = L_all * (span/2 + l1 + l2/2);
+    M_y2 = D_all * (span/2 + l1 + l2/2);
+
+    % 截面应力
+    sig_x1 = M_x1 / W_1;   sig_y1 = M_y1 / W_1;
+    sig_x2 = M_x2 / W_2;   sig_y2 = M_y2 / W_2;
+    tau_1  = M_all / W_p1;
+    tau_2  = M_all / W_p2;
+
+    % 辅助角 → 最大等效应力
+    A1 = sqrt(sig_x1.^2 + sig_y1.^2);
+    A2 = sqrt(sig_x2.^2 + sig_y2.^2);
+    sig_r4_1 = sqrt(A1.^2 + 3 * tau_1.^2);
+    sig_r4_2 = sqrt(A2.^2 + 3 * tau_2.^2);
+
+    % 全局最大值 [Pa]
+    sig_max = max([sig_r4_1; sig_r4_2]);
+end
 
 %% ===== 辅助函数 =====
 function val = iif(cond, v1, v2)
