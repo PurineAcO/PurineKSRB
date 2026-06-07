@@ -158,78 +158,114 @@ fprintf(fout, '-----------------------------------------------------------------
 fclose(fout);
 fprintf('Data saved: ug_flutter_data.txt\n');
 
-%% ===== 5. Plots =====
+%% ===== 5. Plots (IEEE style) =====
 
-% --- Figure 1: U_f vs span ---
+% --- Figure 1: 不同展长下颤振速度 ---
 figure('Name', 'Flutter speed vs span');
-plot(l_vals, U_vals, 'o-', 'Color', [0.12 0.47 0.71], 'LineWidth', 2, ...
-    'MarkerSize', 8, 'DisplayName', 'U-g method');
+set(gcf, 'Units', 'centimeters', 'Position', [2 2 16 8]);
+plot(l_vals, U_vals, 'o-', 'Color', [0.12 0.47 0.71], 'LineWidth', 2.0, ...
+    'MarkerSize', 6, 'MarkerFaceColor', [0.12 0.47 0.71], 'DisplayName', 'U-g method');
 hold on;
-plot(ref_span, ref_U, 's--', 'Color', [0.84 0.15 0.16], 'LineWidth', 2, ...
-    'MarkerSize', 8, 'DisplayName', 'Reference');
-for i = 1:length(l_vals)
-    text(l_vals(i), U_vals(i), sprintf('%.1f', U_vals(i)), ...
-        'VerticalAlignment', 'top', 'HorizontalAlignment', 'center', ...
-        'FontSize', 9, 'Color', [0.12 0.47 0.71]);
-end
-for i = 1:length(ref_span)
-    text(ref_span(i), ref_U(i), sprintf('%.1f', ref_U(i)), ...
-        'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', ...
-        'FontSize', 9, 'Color', [0.84 0.15 0.16]);
-end
-xlabel('Span l [m]', 'FontSize', 13);
-ylabel('Flutter speed U_f [m/s]', 'FontSize', 13);
-title(sprintf('Effect of span on flutter speed (b=%.1f m, a=%.1f, density=%.3f kg/m^3)', ...
-    b, a, rho), 'FontSize', 14);
-legend('Location', 'best', 'FontSize', 11);
-grid on;
+plot(ref_span, ref_U, 's--', 'Color', [0.84 0.15 0.16], 'LineWidth', 2.0, ...
+    'MarkerSize', 6, 'MarkerFaceColor', [0.84 0.15 0.16], 'DisplayName', 'Reference');
+xlabel('$l$', 'Interpreter', 'latex', 'FontSize', 11);
+ylabel('$U_f$', 'Interpreter', 'latex', 'FontSize', 11, 'Rotation', 0);
+% title('不同展长下颤振速度', 'FontSize', 11);
+legend('Location', 'best', 'FontSize', 9, 'Box', 'off');
+set(gca, 'FontSize', 10, 'LineWidth', 1.0, 'FontName', 'Times New Roman');
 saveas(gcf, 'ug_flutter_span.png');
 fprintf('\nFigure saved: ug_flutter_span.png\n');
 
-% --- Figure 2: U-g curves for each span ---
-figure('Name', 'U-g curves');
-n_cols = 3;
-n_rows = 2;
-colors = {[0.12 0.47 0.71], [0.84 0.15 0.16]};
-branch_names = {'plunge', 'pitch'};
+% --- Figure 2: 不同展长下U-g 关系 (divergent branch only) ---
+figure('Name', 'U-g curves — divergent branch');
+set(gcf, 'Units', 'centimeters', 'Position', [2 2 16 8]);
+hold on;
+
+span_colors = lines(n_span);
+line_styles = {'-', '--', '-.', ':', '-'};
 
 for idx = 1:n_span
-    subplot(n_rows, n_cols, idx);
     l_val = span_list(idx);
     branches = all_branches{idx};
-    pts = all_pts{idx};
-    hold on;
+    pts      = all_pts{idx};
 
+    % ---- Identify the divergent branch (g crosses from negative to positive) ----
+    divergent_bi = 0;
+    min_U_cross = Inf;
     for bi = 1:2
         data = branches{bi};
-        if ~isempty(data)
-            valid = data(~any(isnan(data), 2), :);
-            [~, si] = sort(valid(:, 1));
-            valid = valid(si, :);
-            plot(valid(:, 3), valid(:, 2), '-', 'Color', colors{bi}, ...
-                'LineWidth', 1.2, 'DisplayName', branch_names{bi});
+        if isempty(data), continue; end
+        valid = data(~any(isnan(data), 2), :);
+        if isempty(valid), continue; end
+        [~, si] = sort(valid(:, 3));          % sort by ascending U
+        valid_u = valid(si, :);
+        g_vals  = valid_u(:, 2);
+        for i = 1:length(g_vals)-1
+            if g_vals(i) <= 0 && g_vals(i+1) > 0
+                t_frac  = -g_vals(i) / (g_vals(i+1) - g_vals(i));
+                U_cross = valid_u(i, 3) + t_frac * (valid_u(i+1, 3) - valid_u(i, 3));
+                if U_cross < min_U_cross
+                    min_U_cross = U_cross;
+                    divergent_bi = bi;
+                end
+                break;
+            end
         end
     end
 
-    yline(0, 'k--', 'LineWidth', 0.8, 'Alpha', 0.5);
+    % Fallback: pick any branch whose g ever becomes positive
+    if divergent_bi == 0
+        for bi = 1:2
+            data = branches{bi};
+            if isempty(data), continue; end
+            valid = data(~any(isnan(data), 2), :);
+            if ~isempty(valid) && any(valid(:, 2) > 0)
+                divergent_bi = bi;
+                break;
+            end
+        end
+    end
+
+    % Last fallback: use branch 2 (pitch)
+    if divergent_bi == 0
+        divergent_bi = 2;
+    end
+
+    % ---- Plot the divergent branch, truncated at U_inf = 35 m/s ----
+    data = branches{divergent_bi};
+    if ~isempty(data)
+        valid = data(~any(isnan(data), 2), :);
+        [~, si] = sort(valid(:, 3));           % sort by ascending U
+        valid = valid(si, :);
+        valid = valid(valid(:, 3) <= 35, :);   % limit U_inf ≤ 35 m/s
+        if ~isempty(valid)
+            ls = line_styles{mod(idx-1, length(line_styles)) + 1};
+            plot(valid(:, 3), valid(:, 2), ls, 'Color', span_colors(idx, :), ...
+                'LineWidth', 2.0, 'DisplayName', sprintf('l = %.1f m', l_val));
+        end
+    end
+
+    % ---- Mark zero-crossing (flutter) points on the divergent branch ----
     if ~isempty(pts)
         for j = 1:size(pts, 1)
-            xline(pts(j, 1), 'g:', 'LineWidth', 1, 'Alpha', 0.7);
-            plot(pts(j, 1), 0, 'go', 'MarkerSize', 6, ...
-                'MarkerFaceColor', 'none', 'LineWidth', 2);
+            if pts(j, 3) == divergent_bi && pts(j, 1) <= 35
+                plot(pts(j, 1), 0, 'o', 'Color', span_colors(idx, :), ...
+                    'MarkerSize', 7, 'MarkerFaceColor', span_colors(idx, :), ...
+                    'HandleVisibility', 'off');
+            end
         end
     end
-
-    title(sprintf('l = %.1f m', l_val), 'FontSize', 12);
-    xlabel('U_{\infty} [m/s]', 'FontSize', 10);
-    ylabel('g', 'FontSize', 10);
-    xlim([0, 100]);
-    legend('FontSize', 8, 'Location', 'best');
-    grid on;
 end
-sgtitle('U-g curves for each span', 'FontSize', 15);
-saveas(gcf, 'ug_curves_all_spans.png');
-fprintf('Figure saved: ug_curves_all_spans.png\n');
+
+yline(0, 'k--', 'LineWidth', 1.0, 'HandleVisibility', 'off');
+xlabel('$U_{\infty}$', 'Interpreter', 'latex', 'FontSize', 11);
+ylabel('$g$', 'Interpreter', 'latex', 'FontSize', 11, 'Rotation', 0);
+% title('不同展长下U-g 关系', 'FontSize', 11);
+xlim([0, 35]);
+legend('Location', 'best', 'FontSize', 9, 'Box', 'off');
+set(gca, 'FontSize', 10, 'LineWidth', 1.0, 'FontName', 'Times New Roman');
+saveas(gcf, 'ug_curves_divergent.png');
+fprintf('Figure saved: ug_curves_divergent.png\n');
 
 fprintf('\n===== Done =====\n');
 

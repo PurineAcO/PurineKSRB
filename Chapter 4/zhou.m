@@ -117,6 +117,13 @@ fprintf('  优化:  %8.1f  %8.1f  %8.2f  %10.4e  %10.2f\n', ...
     d1_opt*1e3, d2_opt*1e3, l1_opt, V_opt, sig_opt/1e6);
 fprintf('============================================================\n');
 
+% 保存最优参数供后续绘图使用
+opt_params = struct('d1', d1_opt, 'd2', d2_opt, 'l1', l1_opt, 'l2', l2_opt);
+fid = fopen('opt_params.json', 'w');
+fprintf(fid, '%s', jsonencode(opt_params));
+fclose(fid);
+fprintf('最优参数已保存: opt_params.json\n');
+
 fprintf('\n===== Done =====\n');
 
 
