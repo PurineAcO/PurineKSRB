@@ -1,6 +1,6 @@
 % 支持多个file进行联合绘图,请传入filepaths组和legend_labels组.
 % surface_option若选择'both'则为上下表面均绘制
-function plot_CP(filepaths, outdir, camber, surface_option, legend_labels, aoa)
+function plot_CF(filepaths, outdir, camber, surface_option, legend_labels, aoa)
 
 if nargin < 4 || isempty(surface_option)
     surface_option = 'both';
@@ -65,35 +65,36 @@ for k = 1:n_files
 
     if strcmp(surface_option, 'both')
         % 上表面实线, 下表面同色虚线
-        xu = (upper(:, 2) - min(x)) / chord;  cpu = upper(:, 4);
-        [xu, idx] = sort(xu);  cpu = cpu(idx);
-        plot(xu, cpu, '-', 'LineWidth', 1.2, 'Color', color);
-        xl = (lower(:, 2) - min(x)) / chord;  cpl = lower(:, 4);
-        [xl, idx] = sort(xl);  cpl = cpl(idx);
-        plot(xl, cpl, '--', 'LineWidth', 1.2, 'Color', color);
+        xu = (upper(:, 2) - min(x)) / chord;  cfu = upper(:, 5);
+        [xu, idx] = sort(xu);  cfu = cfu(idx);
+        plot(xu, cfu, '-', 'LineWidth', 1.2, 'Color', color);
+        xl = (lower(:, 2) - min(x)) / chord;  cfl = lower(:, 5);
+        [xl, idx] = sort(xl);  cfl = cfl(idx);
+        plot(xl, cfl, '--', 'LineWidth', 1.2, 'Color', color);
         leg_str = [leg_str, {[lbl ' upper']}, {[lbl ' lower']}];  %#ok<AGROW>
     else  % 仅上表面
-        xu = (upper(:, 2) - min(x)) / chord;  cpu = upper(:, 4);
-        [xu, idx] = sort(xu);  cpu = cpu(idx);
-        plot(xu, cpu, '-', 'LineWidth', 1.2, 'Color', color);
+        xu = (upper(:, 2) - min(x)) / chord;  cfu = upper(:, 5);
+        [xu, idx] = sort(xu);  cfu = cfu(idx);
+        plot(xu, cfu, '-', 'LineWidth', 1.2, 'Color', color);
         leg_str = [leg_str, {lbl}];  %#ok<AGROW>
     end
 end
 
 hold off;
-set(gca, 'YDir', 'reverse');
+
+set(gca, 'YDir', 'normal');
 if ~isempty(aoa)
     title_str = sprintf('AOA= %d', aoa);
 else
-    title_str = 'Pressure Coefficient Distribution';
+    title_str = 'Skin Friction Coefficient Distribution';
 end
-figtool.lbl2axis('$x/c$', '$C_p$', title_str);
+figtool.lbl2axis('$x/c$', '$C_F$', title_str);
 
 if ~isempty(leg_str)
     legend(leg_str, 'Interpreter', 'latex', 'FontSize', 8, ...
-        'Location', 'southeast');
+        'Location', 'northeast');
 end
 
-figtool.savepng(fig, outdir, 'CP_xc.png');
+    figtool.savepng(fig, outdir, 'CF_xc.png');
 
 end

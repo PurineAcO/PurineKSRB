@@ -1,4 +1,4 @@
-function plot_CL(filepath, outdir)
+function plot_CL(filepath, outdir, aoa)
 
 fid = fopen(filepath, 'r');
 if fid == -1, error('Cannot open file: %s', filepath); end
@@ -19,7 +19,7 @@ cl = data(:, 2);  flow_time = data(:, 3);
 
 fig = figtool.newfig(5.0, 3.5);
 plot(flow_time, cl, 'b-', 'LineWidth', 1.2);
-figtool.lbl2axis('$t$ (s)', '$C_L$', 'Lift Coefficient vs. Flow Time');
+figtool.lbl2axis('$t$ (s)', '$C_L$', sprintf('AOA= %d', aoa));
 legend({'$C_L$'}, 'Interpreter', 'latex', 'FontSize', 9, 'Location', 'southeast');
 figtool.savepng(fig, outdir, 'CL_t.png');
 
