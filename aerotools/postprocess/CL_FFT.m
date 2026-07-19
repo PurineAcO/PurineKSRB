@@ -28,7 +28,7 @@ if isempty(data), error('No valid data in: %s', filepath); end
 
 % 保留原始完整数据（用于后面提取 timestep 区间）
 original_data = data;
-cl          = data(:, 2);
+cl          = data(:, 2) * cosd(aoa);  % 修正为真实 CL
 flow_time   = data(:, 3);
 
 % 截断
@@ -40,7 +40,9 @@ if length(cl) < 4
     error('Not enough data points after truncation (need >= 4).');
 end
 
-cl = cl - mean(cl);% 去除直流分量
+% 计算直流分量（保留用于输出）
+dc_offset = mean(cl);
+cl = cl - dc_offset;% 去除直流分量
 
 % FFT
 Fs = 1 / mean(diff(flow_time));
@@ -73,6 +75,7 @@ timestep_interval = [ts_start, ts_end];
 fprintf('\n========== FFT Analysis ==========\n');
 fprintf('  Cutoff time:              %.4f s\n', cutoff_time);
 fprintf('  Samples after truncation:  %d\n', L);
+fprintf('  DC component (mean CL):    %.6f\n', dc_offset);
 fprintf('  Sampling frequency:        %.2f Hz\n', Fs);
 fprintf('  Frequency resolution:      %.4f Hz\n', f(2));
 fprintf('  Main frequency:            %.4f Hz\n', main_freq);

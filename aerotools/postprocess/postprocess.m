@@ -33,11 +33,15 @@ plot_CL(CLpath, output_dir, AOA);
 
 OAT15A = @(t) (t <= 0.8) .* (0.025 .* t) + (t > 0.8) .* (0.125 - 0.125 .* t);
 
-% CPpaths = {'tscache\OAT15A_1_2d-0410', 'tscache\OAT15A_1_2d-0560'};
-% plot_CP(CPpaths, output_dir, OAT15A, 'up', {'CP1', 'CP2'}, AOA);
-% plot_CF(CPpaths, output_dir, OAT15A,'up', {'CF1', 'CF2'},AOA);
+CPpaths = {'tscache\OAT15A_1_2d-0410', 'tscache\OAT15A_1_2d-0560'};
+plot_CP(CPpaths, output_dir, OAT15A, 'up', {'CP1', 'CP2'}, AOA);
+plot_CF(CPpaths, output_dir, OAT15A,'up', {'CF1', 'CF2'},AOA);
+
+% 激波捕捉
+shock_get(CPpaths, output_dir, OAT15A, FILE_PREFIX);
 
 CP_rms('tscache\cp_data', output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
+rmsave(output_dir);
 
 % =========================================================================
 

@@ -95,11 +95,12 @@ end
 
 % 计算每个 x/c 位置的 Cp RMS（相对于时均值的脉动）
 cp_mean = mean(cp_all, 2);
-cp_rms = sqrt(mean((cp_all - cp_mean).^2, 2));
+cp_rms  = sqrt(mean((cp_all - cp_mean).^2, 2));
 
 % 排序 x_over_c（理论上已经有序，保险起见）
 [x_over_c, sort_idx] = sort(x_over_c);
-cp_rms = cp_rms(sort_idx);
+cp_mean = cp_mean(sort_idx);
+cp_rms  = cp_rms(sort_idx);
 
 % 绘图
 fig = figtool.newfig(5.0, 3.5);
@@ -115,5 +116,15 @@ fprintf('  Number of snapshots: %d\n', n_files);
 fprintf('  Upper surface nodes: %d\n', n_upper);
 fprintf('  Max Cp_rms: %.6f at x/c = %.4f\n', max(cp_rms), x_over_c(cp_rms == max(cp_rms)));
 fprintf('==========================================\n\n');
+
+% 保存 x/c, Cp_mean, Cp_rms 到文件
+rmsave_path = fullfile(outdir, 'rmsave.txt');
+fid = fopen(rmsave_path, 'w');
+fprintf(fid, '%-12s %-16s %-16s\n', 'x/c', 'Cp_mean', 'Cp_rms');
+for k = 1:length(x_over_c)
+    fprintf(fid, '%-12.6f %-16.6f %-16.6f\n', x_over_c(k), cp_mean(k), cp_rms(k));
+end
+fclose(fid);
+fprintf('已保存 Cp RMS 数据至: %s\n', rmsave_path);
 
 end
