@@ -23,27 +23,31 @@ fprintf("当前的输出目录为:%s\n",output_dir);
 % ===========================下面是编程区域================================
 
 % 以下为实例,工况为Re=3e6,Ma=0.73的OAT15A的Buffet数据,由于OAT15A的中弧线未知,故使用基于估计的直线替代.
-% output = reynold('Re',3e6, 'Ma',0.73, 'L',0.25,'T_in',300);
-% AOA = 5;
-% FILE_PREFIX = 'OAT15A_1_2d-';
-% 
-% CLpath = 'tscache\cl-rfile.out';
-% plot_CL(CLpath, output_dir, AOA);
-% [main_freq, St, time_interval, timestep_interval] = ...
-%     CL_FFT(CLpath, output_dir, 0.01, output.U_in, 0.25, AOA);
-% 
-% OAT15A = @(t) (t <= 0.8) .* (0.025 .* t) + (t > 0.8) .* (0.125 - 0.125 .* t);
-% 
+output = reynold('Re',3e6, 'Ma',0.73, 'L',0.25,'T_in',300);
+AOA = 6;
+FILE_PREFIX = '1-1-03900-';
+
+CLpath = 'tscache\cl-rfile.out';
+CPpath = 'tscache\cp-data';
+plot_CL(CLpath, output_dir, AOA);
+[main_freq, St, time_interval, timestep_interval] = ...
+    CL_FFT(CLpath, output_dir, 0.048, output.U_in, 0.25, AOA);
+
+OAT15A = @(t) (t <= 0.8) .* (0.025 .* t) + (t > 0.8) .* (0.125 - 0.125 .* t);
+
 % CPpaths = {'tscache\OAT15A_1_2d-0410', 'tscache\OAT15A_1_2d-0560'};
 % plot_CP(CPpaths, output_dir, OAT15A, 'up', {'CP1', 'CP2'}, AOA);
 % plot_CF(CPpaths, output_dir, OAT15A,'up', {'CF1', 'CF2'},AOA);
-% 
-% shock_get(CPpaths, output_dir, OAT15A, FILE_PREFIX);
-% 
-% CP_rms('tscache\cp_data', output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
-% rmsave(output_dir);
+
+shock_get(CPpath, output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
+
+CP_rms(CPpath, output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
+rmsave(output_dir);
+
+plot_CP_phase(CPpath, output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
 
 % =========================================================================
 
 %% 后随部分:非编程区域
+fprintf("脚本运行到这里结束了.");
 diary off;

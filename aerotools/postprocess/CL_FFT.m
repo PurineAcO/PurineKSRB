@@ -20,21 +20,21 @@ while ~feof(fid)
     line = fgetl(fid);
     if ischar(line) && ~isempty(strtrim(line))
         nums = sscanf(line, '%f %f %f');
-        if numel(nums) == 3, data = [data; nums']; end
+        if numel(nums) == 3, data = [data; nums']; end %#ok<AGROW>
     end
 end
 fclose(fid);
 if isempty(data), error('No valid data in: %s', filepath); end
 
-% 保留原始完整数据（用于后面提取 timestep 区间）
-original_data = data;
 cl          = data(:, 2) * cosd(aoa);  % 修正为真实 CL
 flow_time   = data(:, 3);
+ts_all      = data(:, 1);             % 时间步序列
 
 % 截断
 idx_start  = flow_time >= cutoff_time;
 cl         = cl(idx_start);
 flow_time  = flow_time(idx_start);
+ts_all     = ts_all(idx_start);
 
 if length(cl) < 4
     error('Not enough data points after truncation (need >= 4).');
@@ -61,14 +61,30 @@ main_freq = f(idx + 1);
 % 计算主频对应 Strouhal number
 St = main_freq * chord / U_inf;
 
-% 从原始数据提取最后一个物理周期的 timestep 区间
-T_period = 1 / main_freq;
-t_end    = original_data(end, 3);
-t_start  = t_end - T_period;
-[~, i_start] = min(abs(original_data(:, 3) - t_start));
-i_end = size(original_data, 1);
-ts_start = original_data(i_start, 1);
-ts_end   = original_data(i_end, 1);
+% 在截断后的 CL 信号中检测波峰，取最后两个波峰之间的区间作为一个周期
+peak_idx = [];
+for i = 2:length(cl)-1
+    if cl(i) > cl(i-1) && cl(i) > cl(i+1)
+        % 简单阈值：波峰幅值至少为主频幅值的一半，排除小噪声
+        if abs(cl(i)) > 0.5 * peak_amp
+            peak_idx = [peak_idx; i];  %#ok<AGROW>
+        end
+    end
+end
+
+if length(peak_idx) < 2
+    error('CL 信号中检测到的波峰不足 2 个（%d 个），无法确定周期。', length(peak_idx));
+end
+
+% 取最后两个波峰
+i_prev = peak_idx(end-1);
+i_last = peak_idx(end);
+
+t_start   = flow_time(i_prev);
+t_end     = flow_time(i_last);
+ts_start  = round(ts_all(i_prev));
+ts_end    = round(ts_all(i_last));
+T_period  = t_end - t_start;
 time_interval     = [t_start, t_end];
 timestep_interval = [ts_start, ts_end];
 
@@ -89,7 +105,8 @@ for k = 1:min(5, length(idx_sort))
     fi = idx_sort(k) + 1;
     fprintf('  %d.  %.4f Hz  (%.6f)\n', k, f(fi), P1(fi));
 end
-fprintf('  -------- Last Cycle (original data) --------\n');
+fprintf('  -------- Last Cycle (peak-to-peak) --------\n');
+fprintf('  Peaks detected:            %d\n', length(peak_idx));
 fprintf('  Physical period:           %.6f s\n', T_period);
 fprintf('  Time range:                [%.6f, %.6f] s\n', t_start, t_end);
 fprintf('  Time-step range:           [%d, %d]\n', ts_start, ts_end);

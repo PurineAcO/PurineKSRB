@@ -1,34 +1,51 @@
-function shock_get(filepaths, outdir, camber, file_prefix)
-% 激波捕捉: 通过上表面 Cp 相邻点差分突增识别激波位置
-%   filepaths   - 数据文件路径列表（cell 数组）或单个路径
-%   outdir      - 输出文件夹
-%   camber      - 弯度函数句柄
-%   file_prefix - 文件名前缀,用于从文件路径提取时间步号
+function shock_get(cp_dir, outdir, timestep_interval, camber, aoa, file_prefix)
+% 激波捕捉: 扫描 cp_data 目录,在指定时间步区间内逐个检测上表面激波位置
+%   cp_dir             - cp_data 文件夹路径
+%   outdir             - 输出文件夹
+%   timestep_interval  - 时间步区间 [ts_start, ts_end]
+%   camber             - 弯度函数句柄
+%   aoa                - 迎角 [deg]
+%   file_prefix        - 文件名前缀,如 'OAT15A_1_2d-'
 
-if ischar(filepaths) || isstring(filepaths)
-    filepaths = {char(filepaths)};
+ts_start = timestep_interval(1);
+ts_end   = timestep_interval(2);
+
+% 列出所有 cp_data 文件
+pattern = [file_prefix, '*'];
+files = dir(fullfile(cp_dir, pattern));
+if isempty(files)
+    error('在 %s 中未找到 cp_data 文件', cp_dir);
 end
-n_files = numel(filepaths);
+
+% 提取文件名的数字后缀并筛选时间步区间内的文件
+ts_list = [];
+file_list = {};
+for k = 1:numel(files)
+    fname = files(k).name;
+    num_str = fname(length(file_prefix)+1:end);
+    ts_val = str2double(num_str);
+    if ts_val >= ts_start && ts_val <= ts_end
+        ts_list = [ts_list; ts_val];     %#ok<AGROW>
+        file_list = [file_list; fullfile(cp_dir, fname)];  %#ok<AGROW>
+    end
+end
+
+if isempty(file_list)
+    error('在 timestep [%d, %d] 区间内未找到 cp_data 文件', ts_start, ts_end);
+end
+
+n_files = numel(file_list);
+fprintf('找到 %d 个 cp_data 文件 (timestep: %d ~ %d)\n', n_files, ts_list(1), ts_list(end));
 
 shock_path = fullfile(outdir, 'shock_get.txt');
 fid_out = fopen(shock_path, 'w');
 fprintf(fid_out, '%-12s %-16s\n', 'timestep', 'shock_x/c');
 
-fprintf('\n======= Shock Detection =======\n');
+fprintf('\n============ Shock Detection (AOA=%d) ============\n', aoa);
 
 for k = 1:n_files
-    fpath = filepaths{k};
-
-    % 从文件名提取时间步号
-    [~, fname, ~] = fileparts(fpath);
-    if nargin >= 4 && ~isempty(file_prefix)
-        num_str = fname(length(file_prefix)+1:end);
-    else
-        % 尝试提取末尾数字
-        num_str = regexp(fname, '\d+$', 'match');
-        if isempty(num_str), num_str = fname; end
-    end
-    timestep = str2double(num_str);
+    fpath = file_list{k};
+    timestep = ts_list(k);
 
     % 读取数据
     fid = fopen(fpath, 'r');
@@ -77,7 +94,7 @@ for k = 1:n_files
     delta_cp = abs(diff(cp_upper));
 
     % 激波定位: 排除前缘区域 (x/c < 0.05) 后取最大 Cp 梯度位置
-    le_exclude = 0.05;  % 排除前缘干扰
+    le_exclude = 0.05;
     mask = xc_upper(2:end) > le_exclude;
     if any(mask)
         [~, imax] = max(delta_cp(mask));
@@ -90,15 +107,17 @@ for k = 1:n_files
     % 写入结果
     if isnan(shock_xc)
         fprintf(fid_out, '%-12d %-16s\n', timestep, 'none');
-        fprintf('  %s: 未检测到激波\n', fname);
+        fprintf('  timestep %d: 未检测到激波\n', timestep);
     else
         fprintf(fid_out, '%-12d %-16.6f\n', timestep, shock_xc);
-        fprintf('  %s: shock at x/c = %.4f\n', fname, shock_xc);
+        fprintf('  timestep %d: shock at x/c = %.4f\n', timestep, shock_xc);
     end
 end
 
 fclose(fid_out);
-fprintf('==============================\n');
+fprintf('========================================\n');
 fprintf('激波位置已保存至: %s\n', shock_path);
+fprintf('  时间步区间: [%d, %d]\n', ts_start, ts_end);
+fprintf('  快照数量: %d\n', n_files);
 
 end
