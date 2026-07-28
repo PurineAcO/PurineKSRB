@@ -82,6 +82,31 @@ i_last = peak_idx(end);
 
 t_start   = flow_time(i_prev);
 t_end     = flow_time(i_last);
+T_period  = t_end - t_start;
+
+% 变步长兼容: 如果最后两个波峰间隔远小于FFT主频对应周期,
+% 说明末尾噪声被误检为波峰,往前搜索一个合理的完整周期.
+T_fft = 1 / main_freq;
+if T_period < 0.3 * T_fft && length(peak_idx) >= 4
+    for k = length(peak_idx)-2:-1:3
+        i_candidate_prev = peak_idx(k-1);
+        i_candidate_last = peak_idx(k);
+        T_candidate = flow_time(i_candidate_last) - flow_time(i_candidate_prev);
+        if T_candidate >= 0.5 * T_fft
+            i_prev = i_candidate_prev;
+            i_last = i_candidate_last;
+            t_start = flow_time(i_prev);
+            t_end   = flow_time(i_last);
+            T_period = t_end - t_start;
+            fprintf('  (峰值检测修正: 改用第 %d 和第 %d 个波峰, T=%.6f s)\n', ...
+                k-1, k, T_period);
+            break;
+        end
+    end
+end
+
+t_start   = flow_time(i_prev);
+t_end     = flow_time(i_last);
 ts_start  = round(ts_all(i_prev));
 ts_end    = round(ts_all(i_last));
 T_period  = t_end - t_start;
@@ -122,7 +147,7 @@ plot(main_freq, peak_amp, 'ro', 'MarkerSize', 5, 'MarkerFaceColor', 'r');
 text(main_freq, peak_amp, sprintf('  %.4f Hz', main_freq), ...
     'FontSize', 9, 'Color', 'r');
 hold off;
-figtool.lbl2axis('$f$ (Hz)', '$|C_L(f)|$', sprintf('AOA = %d', aoa));
+figtool.lbl2axis('$f$ (Hz)', '$|C_L(f)|$', sprintf('AOA = %.1f', aoa));
 figtool.savepng(fig, outdir, 'CL_fft.png');
 
 end

@@ -108,7 +108,7 @@ cp_rms  = cp_rms(sort_idx);
 fig = figtool.newfig(5.0, 3.5);
 plot(x_over_c, cp_rms, 'b-', 'LineWidth', 1.2);
 figtool.lbl2axis('$x/c$', '$C_{p,rms}$', ...
-    sprintf('AOA=%d', aoa));
+    sprintf('AOA=%.1f', aoa));
 figtool.savepng(fig, outdir, 'CPrms_xc.png');
 
 % 控制台输出

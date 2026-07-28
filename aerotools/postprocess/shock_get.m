@@ -41,7 +41,7 @@ shock_path = fullfile(outdir, 'shock_get.txt');
 fid_out = fopen(shock_path, 'w');
 fprintf(fid_out, '%-12s %-16s\n', 'timestep', 'shock_x/c');
 
-fprintf('\n============ Shock Detection (AOA=%d) ============\n', aoa);
+fprintf('\n============ Shock Detection (AOA=%.1f) ============\n', aoa);
 
 for k = 1:n_files
     fpath = file_list{k};

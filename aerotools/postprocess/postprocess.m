@@ -29,43 +29,47 @@ disp(output);
 FILE_PREFIX = '1-20-';
 OAT15A = @(t) (t <= 0.8) .* (0.025 .* t) + (t > 0.8) .* (0.125 - 0.125 .* t);
 
-% 定义要处理的 AOA 列表及其数据路径
+% 定义要处理的 AOA 列表
+% 结构体字段: AOA, cl_path, cp_path, label_suffix, cutoff_time
 aoa_list = [
-    struct('AOA', 3.0, 'cl_path', 'tscache_3deg\cl-rfile.out', 'cp_path', 'tscache_3deg\cpdata');
-    struct('AOA', 3.1, 'cl_path', 'tscache_3.1deg\cl-rfile.out', 'cp_path', 'tscache_3.1deg\cpdata');
-    struct('AOA', 3.5, 'cl_path', 'tscache_3.5deg\cl-rfile.out', 'cp_path', 'tscache_3.5deg\cpdata');
-    struct('AOA', 3.9, 'cl_path', 'tscache_3.9deg\cl-rfile.out', 'cp_path', 'tscache_3.9deg\cpdata');
+    % DES 结果: 3.5deg, 截断时间 6s
+    struct('AOA', 3.5, ...
+           'cl_path', 'tscache_3.5deg_DES\cl-rfile.out', ...
+           'cp_path', 'tscache_3.5deg_DES\cpdata', ...
+           'label_suffix', '_DES', 'cutoff_time', 6);
 ];
 
 for idx = 1:numel(aoa_list)
     AOA = aoa_list(idx).AOA;
     CLpath = aoa_list(idx).cl_path;
     CPpath = aoa_list(idx).cp_path;
+    label_suffix = aoa_list(idx).label_suffix;
+    cutoff_time = aoa_list(idx).cutoff_time;
     
-    % 为每个 AOA 创建独立的输出子目录
-    aoa_label = sprintf('aoa_%.1f', AOA);
+    aoa_label = sprintf('aoa_%.1f%s', AOA, label_suffix);
     aoa_output_dir = fullfile(output_dir, aoa_label);
     if ~exist(aoa_output_dir, 'dir')
         mkdir(aoa_output_dir);
     end
     
-    fprintf('\n========== Processing AOA = %.1f deg ==========\n', AOA);
+    fprintf('\n========== Processing AOA = %.1f deg%s (cutoff=%ds) ==========\n', AOA, label_suffix, cutoff_time);
     
     try
         plot_CL(CLpath, aoa_output_dir, AOA);
         [main_freq, St, time_interval, timestep_interval] = ...
-            CL_FFT(CLpath, aoa_output_dir, 2, output.U_in, output.L, AOA);
-        [main_freq_psd, St_psd, ~, ~] = ...
-            CL_PSD(CLpath, aoa_output_dir, 2, output.U_in, output.L, AOA);
+            CL_FFT(CLpath, aoa_output_dir, cutoff_time, output.U_in, output.L, AOA);
+        % [main_freq_psd, St_psd, ~, ~] = ...
+        %     CL_PSD(CLpath, aoa_output_dir, cutoff_time, output.U_in, output.L, AOA);
+        % 
+        % timestep_interval = [16081, 16196];
+        % shock_get(CPpath, aoa_output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
+        % CP_rms(CPpath, aoa_output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
+        % rmsave(aoa_output_dir);
+        % plot_CP_phase(CPpath, aoa_output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
         
-        shock_get(CPpath, aoa_output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
-        CP_rms(CPpath, aoa_output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
-        rmsave(aoa_output_dir);
-        plot_CP_phase(CPpath, aoa_output_dir, timestep_interval, OAT15A, AOA, FILE_PREFIX);
-        
-        fprintf('========== Finished AOA = %.1f deg ==========\n\n', AOA);
+        fprintf('========== Finished AOA = %.1f deg%s ==========\n\n', AOA, label_suffix);
     catch ME
-        fprintf('********** ERROR processing AOA = %.1f deg **********\n', AOA);
+        fprintf('********** ERROR processing AOA = %.1f deg%s **********\n', AOA, label_suffix);
         fprintf('Error message: %s\n', ME.message);
         fprintf('Skipping to next AOA.\n\n');
     end

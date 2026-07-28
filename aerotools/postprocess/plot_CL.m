@@ -20,7 +20,7 @@ cl = cl * cosd(aoa);  % 修正为真实 CL
 
 fig = figtool.newfig(5.0, 3.5);
 plot(flow_time, cl, 'b-', 'LineWidth', 1.2);
-figtool.lbl2axis('$t$ (s)', '$C_L$', sprintf('AOA= %d', aoa));
+figtool.lbl2axis('$t$ (s)', '$C_L$', sprintf('AOA= %.1f', aoa));
 legend({'$C_L$'}, 'Interpreter', 'latex', 'FontSize', 9, 'Location', 'southeast');
 figtool.savepng(fig, outdir, 'CL_t.png');
 

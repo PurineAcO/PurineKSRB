@@ -84,7 +84,7 @@ end
 hold off;
 set(gca, 'YDir', 'reverse');
 if ~isempty(aoa)
-    title_str = sprintf('AOA= %d', aoa);
+    title_str = sprintf('AOA= %.1f', aoa);
 else
     title_str = 'Pressure Coefficient Distribution';
 end
