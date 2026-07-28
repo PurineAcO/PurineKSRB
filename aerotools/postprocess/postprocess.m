@@ -23,15 +23,19 @@ fprintf("当前的输出目录为:%s\n",output_dir);
 % ===========================下面是编程区域================================
 
 % 以下为实例,工况为Re=3e6,Ma=0.73的OAT15A的Buffet数据,由于OAT15A的中弧线未知,故使用基于估计的直线替代.
-output = reynold('Re',3e6, 'Ma',0.73, 'L',0.25,'T_in',300);
-AOA = 6;
-FILE_PREFIX = '1-1-03900-';
+output = reynold('Re',3e6, 'Ma',0.73, 'L',1,'T_in',300);
+disp(output);
+AOA = 3.9;
+fprintf("AOA is %f",AOA);
+FILE_PREFIX = '1-20-';
 
-CLpath = 'tscache\cl-rfile.out';
-CPpath = 'tscache\cp-data';
+CLpath = "tscache\cl-rfile.out";
+CPpath = 'tscache\cpdata';
 plot_CL(CLpath, output_dir, AOA);
 [main_freq, St, time_interval, timestep_interval] = ...
-    CL_FFT(CLpath, output_dir, 0.048, output.U_in, 0.25, AOA);
+    CL_FFT(CLpath, output_dir,2, output.U_in, output.L, AOA);
+[main_freq_psd, St_psd, ~, ~] = ...
+    CL_PSD(CLpath, output_dir,2, output.U_in, output.L, AOA);
 
 OAT15A = @(t) (t <= 0.8) .* (0.025 .* t) + (t > 0.8) .* (0.125 - 0.125 .* t);
 

@@ -16,6 +16,7 @@ function [output] = reynold(varargin)
     T_in = p.Results.T_in;
     p_inf = p.Results.p_inf;
     L = p.Results.L;
+    output.L = p.Results.L;
 
     % 验证输入互斥性
     if ~isnan(Ma_input) && ~isnan(U_in_input)

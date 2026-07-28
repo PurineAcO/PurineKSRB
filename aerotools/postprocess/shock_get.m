@@ -55,6 +55,7 @@ for k = 1:n_files
     while ~feof(fid)
         line = fgetl(fid);
         if ischar(line) && ~isempty(strtrim(line))
+            line = strrep(line, ',', ' ');
             nums = sscanf(line, '%f');
             if numel(nums) >= 4, data = [data; nums(1:5)']; end %#ok<AGROW>
         end
