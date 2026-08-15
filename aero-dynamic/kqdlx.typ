@@ -1,4 +1,4 @@
-#import "lib.typ" :* 
+#import "lib.typ" :*
 // #import "@preview/cetz:0.4.2"
 
 #show: project.with(
@@ -11,6 +11,18 @@
 #let Ma = $M a$
 #let LE=$"LE"$
 #let TE=$"TE"$
+
+#columns(2)[
+#outline(
+  title: "Contexts",
+  depth: 3,
+  indent: 1em,
+)
+]
+
+
+#pagebreak()
+
 = 绪论
 
 #linebreak()
@@ -25,7 +37,7 @@ _Aerodynamics: The dynamics of gases, especially atmospheric interactions with m
 
 #linebreak()
 
-#columns(2)[== _History_ 
+#columns(2)[== _History_
 
 === 起源---水力学
 
@@ -73,7 +85,7 @@ Allen 断言,如果再入大气层的总能量中有更多的热量从边界层�
 
 总之,本节的目的是强调空气动力学在历史背景下的重要性.本书的目的是介绍空气动力学的基础知识,并让读者更深入地了解除上述几种应用之外的许多技术应用,空气动力学也是一门充满智慧之美的学科,几个世纪以来,许多伟大的科学家都曾深入研究过空气动力学,如果您对这些思想充满挑战和兴趣,甚至有丝毫好奇,那么请继续往下阅读.
 
-== _Classification and Practical objectives_
+== 什么是空气动力学
 
 简单地说,固体、液体和气体的区别如下:将一个固体物体放入一个较大的封闭容器中,固体物体不会发生变化,其形状和边界保持不变;现在在容器中放入液体,液体会改变形状,以符合容器的形状,并且在液体的最大深度以内,其边界与容器的边界相同;现在在容器内放入气体,气体将完全充满容器,其边界与容器相同.
 
@@ -407,7 +419,7 @@ $ g'(Pi_1,Pi_2,Pi_3) = 0 $<163>
 
 如果我们按照别人曾经做的那样保留$rho_infinity,V_infinity$,就可以认为:
 
-$ 
+$
 Pi_1 &= f_3 (rho_infinity , V_infinity , c, R) \
 Pi_2 &= f_4 (rho_infinity , V_infinity , c, mu_infinity) \
 Pi_3 &= f_5 (rho_infinity , V_infinity , c, a_infinity) $<164>
@@ -549,7 +561,7 @@ $ p_b = p_0 - rho g Delta h $
 
 考虑流体绕某物体（例如直径为$d$的圆柱体）的流动。此外，假设流体由单独的分子组成，这些分子正在进行随机运动。分子在与邻近分子发生碰撞之间移动的平均距离被定义为平均自由程(_mean-free path_)$λ$,如果$lambda$比以$d$为单位的物体尺度小几个数量级，那么对物体而言，该流动表现为一种连续物质。分子撞击物体表面的频率如此之高，以至于物体无法分辨单个分子的碰撞，表面将流体感知为一种连续介质，这种流动称为连续流(_continuum flow_)。另一种极端情况是当$lambda$与物体尺度处于同一数量级时；此时气体分子之间的间距（相对于$d$）非常大，与物体表面的碰撞极为罕见，物体表面能够清晰地感知到每次分子撞击。这种流动被称为自由分子流(_free molecular flow_)。航天飞机等飞行器在大气层最外缘会遇到自由分子流，那里空气密度极低，使得$lambda$与航天飞机的尺寸处于同一数量级。还有一些中间情况，流场可能同时表现出连续流和自由分子流的某些特征。迄今为止，绝大多数实际空气动力学应用都涉及连续流。低密度流和自由分子流仅是空气动力学整体范畴中的一小部分。因此，本书将始终讨论连续流；也就是说，我们将始终将流体视为连续介质。
 
-=== 无粘流动与粘性流动  
+=== 无粘流动与粘性流动
 
 如前所述，气体或液体的一个主要特征是其分子能够相当自由地运动。当分子运动时，即使是以非常随机的形式运动，它们显然也会将质量、动量和能量从流体中的一个位置传递到另一个位置。这种分子尺度的传输导致了质量扩散、粘度（摩擦）和热传导等现象。此类“输运现象”将在第15章中详细讨论，我们只需认识到所有实际流动都表现出这些输运现象的影响；此类流动被称为粘性流动(_viscous flow_)。
 
@@ -563,7 +575,7 @@ $ p_b = p_0 - rho g Delta h $
 
 @fig:1-9-boundary-separate 顶部绘制了这种分离流；这是失速(_stalled_)机翼上空流场的典型特征。分离流也主导着钝体（如圆柱体）的气动特性。流场在圆柱体前端面周围膨胀，但在后端面从表面分离，在下游形成一个相当粗大的尾流。@fig:1-9-boundary-separate 中所示的流场类型主要受粘性效应支配；没有任何无粘性理论能够独立预测该现象。
 
-=== 不可压缩流与可压缩流  
+=== 不可压缩流与可压缩流
 
 密度$rho$保持恒定的流动称为不可压缩(_incompress-ible_)流。相反，密度随流动而变化的流动称为可压缩(_compressible_)流。关于可压缩性的更精确定义将在第7章中给出。所有流动在不同程度上都是可压缩的；密度完全恒定的真正不可压缩流动在自然界中并不存在。然而，与我们对无粘流动的讨论类似，有许多空气动力学问题可以建模为不可压缩流动，而不会造成任何有害的精度损失。例如，均质液体的流动被视为不可压缩的，因此大多数涉及流体力学的问题都假设$rho = C$，此外，低马赫数下的气体流动是不可压缩的；当$Ma < 0.3$时，假设$rho$为常数是安全的。从1903年莱特兄弟首次飞行到第二次世界大战前夕，所有飞机的飞行工况均属于这一范畴。时至今日，这仍是大多数小型通用航空飞机的飞行工况。因此，关于不可压缩流的空气动力学实验和理论数据十分丰富。另一方面，高速流动（接近马赫数1及以上）必须视为可压缩流动。
 
@@ -635,8 +647,6 @@ $Re_x$是很重要的参数，边界层的$tau_w$和$delta$都是$Re_x$的函数
 
 #figure(image("assets/image-64.png",width:80%),caption: [平板边界层中层流和湍流状态下$C_f$同$Re$的关系])
 
-
-
 == 总结
 
 本章主要是定性描述，侧重于定义和基本概念。然而，一些较为重要的定量关系总结如下：作用于气动体的法向力、轴向力、升力、阻力以及力矩系数，可以通过对从物体前缘到后缘的表面上的压力系数和摩擦系数进行积分来获得。对于二维物体：
@@ -651,3 +661,157 @@ $ c_(m_(L E)) = 1/(c^2)  [ & integral_0^c (C_(p, u) - C_(p, l)) x d x - integral
 $ c_l = c_n cos alpha - c_a sin alpha , c_d = c_n sin alpha + c_a cos alpha , x_(c p) = - (M'_(L E))/(N') approx - (M'_(L E))/(L') $
 
 此外，还描述了$Re$和$Ma$这些参数，并基于这些参数引申地阐述了基本的流动形式及其现象。
+
+#pagebreak()
+
+= 空气动力学的数学基础
+
+#columns(2)[
+
+== 矢量的运算
+
+首先本书约定向量使用以下的符号表述：$arrow(a)$ 或者 $bold(a)$，有时为了和矩阵区分，使用前者表示向量，向量的点积和叉积表示为
+
+$ arrow(a) dot arrow(b) = norm(arrow(a)) dot norm(arrow(b)) dot cos chevron.l arrow(a),arrow(b) chevron.r $
+
+$ arrow(a) times arrow(b) = norm(arrow(a)) dot norm(arrow(b)) dot sin chevron.l arrow(a),arrow(b) chevron.r arrow(e) $
+
+其中$arrow(e)$是单位向量，表示将前两个向量进行右手螺旋的结果。接着定义直角坐标系($x,y,z$)、柱坐标系($r,theta,z$)和球坐标系($r,theta,phi$)
+
+物理量$p,T,rho$本身是标量，但是他们在流场中是位置坐标和时间的函数，如$p(x,y,z,t)$这被称为标量场，速度$bold(V)$也是坐标和时间的函数，但是它是一个矢量场
+
+$ bold(V)(x,y,z,t) = u bold(i) + v bold(j) + w bold(k) $
+
+在坐标的体系下，同样可以定义叉积：
+
+$ bold(a) times bold(b) = mat(delim:"|",bold(e_1),bold(e_2),bold(e_3);a_1,a_2,a_3;b_1,b_2,b_3) $
+
+=== $nabla$ 算子
+
+在数学性质充分好的标量场中（实际上大多数场的数学性质都满足），可以先定义一个方向导数
+
+$ pardiff(phi.alt,bold(n)) = sum_i k_i pardiff(phi.alt,x_i) $
+
+容易知道，当$k_i = pardiff(phi.alt,x_i)$时，$norm(pardiff(phi.alt,bold(n)))$有最大值，这个$k_i$组成的向量就是上述方向导数的方向，称为梯度，它指示了标量场变化最快的方向
+
+$ nabla phi.alt = (pardiff(phi.alt,x),pardiff(phi.alt,y),pardiff(phi.alt,z)) $<eq:2-1-1>
+
+由此，可以看出，对任何一个方向向量$bold(s)$，标量场在该方向的方向导数为
+
+$ pardiff(phi.alt,bold(s)) = nabla phi.alt dot bold(s) $
+
+最后我们给出在柱坐标、球坐标下的梯度的求法
+
+$ nabla phi.alt = pardiff(phi.alt,r) bold(e_r) + 1/r pardiff(phi.alt,theta) bold(e_theta) + pardiff(phi.alt,z) bold(e_z) $<eq:2-1-2>
+
+$ nabla phi.alt = pardiff(phi.alt,r) bold(e_r) + 1/r pardiff(phi.alt,theta) bold(e_theta) + 1/(r sin theta) pardiff(phi.alt,Phi) bold(e_Phi) $<eq:2-1-3>
+
+实际上我们引用了一种算子$nabla$，他将一个$RR$上的概念映射到$RR^3$上，$nabla$可以凭借经验地如下定义：
+
+$ nabla (dot) := sum_i pardiff((dot),x_i) bold(e_i) $
+
+作为一个线性代数概念，算子比矩阵、映射、泛函等概念还要更抽象，且理所当然地具有特征值、特征向量等说法。通俗的讲，$nabla$衡量了某种空间变化率，在这个直观的概念下，我们考察向量场：
+
+首先我们定义向量场$bold(V)$的散度$nabla dot bold(V)$：
+
+$ nabla dot bold(V) = pardiff(u,x) + pardiff(v,y) + pardiff(w,z) $<eq:2-1-4>
+
+以及旋度$nabla times bold(V)$：
+
+$ nabla times bold(V) = mat(delim:"|",bold(i),bold(j),bold(k);pardiff(,x),pardiff(,y),pardiff(,z);u,v,w,) $<eq:2-1-5>
+
+下面给出柱坐标的散度：
+
+$ nabla dot.op upright(bold(V)) = 1/r partial/(partial r) (r V_r) + 1/r (partial V_theta)/(partial theta) + (partial V_z)/(partial z) $
+
+球坐标的散度：
+
+$ nabla dot.op upright(bold(V)) = 1/(r^2) partial/(partial r) (r^2 V_r) + 1/(r sin theta) partial/(partial theta) (V_theta sin theta) + 1/(r sin theta) (partial V_phi.alt)/(partial phi.alt) $
+
+柱坐标的旋度
+
+$ nabla times upright(bold(V)) = 1/r
+mat(delim: "|", upright(bold(e))_r, r upright(bold(e))_theta, upright(bold(e))_z;
+partial/(partial r), partial/(partial theta), partial/(partial z);
+V_r, r V_theta, V_z) $
+
+球坐标的旋度
+
+$ nabla times upright(bold(V)) = 1/(r^2 sin theta)
+mat(delim: "|", upright(bold(e))_r, r upright(bold(e))_theta, (r sin theta) upright(bold(e))_phi.alt;
+partial/(partial r), partial/(partial theta), partial/(partial phi.alt);
+V_r, r V_theta, (r sin theta) V_phi.alt) $
+
+=== 曲线积分和曲面积分
+
+#figure(image("assets/image-65.png",width:50%),caption: [曲线积分示意])<fig:2-1-1>
+
+如@fig:2-1-1，考虑空间中存在一条从(_a_)到(_b_)的曲线_C_，另有一个向量场$bold(A)$，其在_C_上的积分
+
+$ integral_C bold(A) dif bold(s) = integral_C bold(A) dot bold(n) dif s $
+
+其中$n$是$dif s$处的方向向量。进一步，如果像@fig:2-1-2 一样，_C_是一个已经闭合的曲线，积分就变成了闭合的曲线积分
+
+$ integral.cont_C bold(A) dif bold(s) =integral.cont_C bold(A) dot bold(n) dif s $
+
+#figure(image("assets/image-66.png",width:80%),caption: [闭合曲线积分和曲面积分示意])<fig:2-1-2>
+
+根据惯例，如果沿着_C_运行的方向上看去，闭合区域一直处于_C_的左侧，则认为这个积分是正的。
+
+进一步可以定义曲面积分，曲面积分不单单适用于向量场也适用于标量场（曲线积分也一样），如果是标量场则
+
+$ integral.double_S phi.alt dif S = lim_(lambda(Delta) arrow 0) sum_Delta phi.alt Delta S $
+
+向量场：
+
+$ integral.double_S bold(V) dif bold(S) = integral.double_S bold(V) dot bold(n) dif S $
+
+#figure(image("assets/image-67.png",width: 80%),caption: [闭合曲面积分])
+
+曲面还可以围成一个体，此时：
+
+$ integral.surf_S bold(V) dif bold(S) = integral.surf_S bold(V) dot bold(n) dif S $
+
+$bold(n)$一般指的是外法向。
+
+曲面积分和曲线积分都可以互相转化并转化为一个重积分，这依赖的是Stokes公式
+
+$ integral.cont_(partial S) bold(V) dif bold(s) = integral.double_S nabla times bold(V) dot dif bold(S) $<eq:2-1-6>
+
+和Gauss公式
+
+$ integral.surf_(partial Omega) bold(V) dot dif bold(S) = integral.triple_(Omega) nabla dot bold(V) dif cal(V)  $<eq:2-1-7>
+
+以及Green-Gauss梯度公式
+
+$ integral.surf_(partial Omega) phi.alt dif bold(S) = integral.triple_Omega nabla phi.alt dif cal(V)  $<eq:2-1-8>
+
+@eq:2-1-6 和@eq:2-1-7 比较出名，但是@eq:2-1-8 十分重要，他们的意义不仅在于数学上，也在于提供了工程上一种模拟手段。在计算流体力学计算中，我们经常使用有限体积的方法，这种方法的核心思路是取一个极其微小的控制体$Omega$（_网格_），在$Omega$*内*#footnote[不包含网格的边界、节点]各个点的物理量是均等的。那么如何给出不同网格之间的物理量梯度呢？就可以借助@eq:2-1-8 的离散形式：
+
+$ overline(nabla phi.alt) = 1/cal(V) sum_i phi.alt dot bold(S)_i $<eq:2-1-9>
+
+这就是Green-Gauss Cell-Based法（_GGCB_），被广泛应用于商业软件中。这种方法是2阶精度的#footnote[精度的定义基于Taylor展开，由于面上的物理量采取中心差分，而GGCB不会损失精度，所以对于横平竖直的结构化网格是2阶的，但是如果网格畸变严重，就会失去精度。由于很多空间离散的精度高度依赖梯度，所以准确给出梯度的重构很重要。]
+
+== 控制体、流体微元
+
+我们考虑的流体力学是纯物理的流动，且大多发生在可想象的地球空间，这保证了空气中不会出现一些未预期的化学反应，空气的常数和基本热学关系得以成立。在讲述完数学运算以后、推导控制方程之前，我们需要认同以下三条内容
+
+- 质量守恒，即质量既不能被创造和毁灭
+
+- 牛顿第二定律：$F= m a$
+
+- 能量守恒；能量转化时，其总量不变
+
+流体是一种可变形的物质，因此通常比定义明确的刚体更难描述。因此，我们必须采用一个合理的流体模型，才能将基本原理应用于该模型。在现代空气动力学的发展历程中，有三种不同的模型已被成功应用。它们分别是：有限控制体积模型，微小流体元模型，以及分子模型。
+
+#figure(image("assets/image-68.png",width:70%),caption: [控制体])
+
+我们在空间中直接划定一个区域$Omega$，其具有你自己定义且不变的体积$cal(V)$，并且它不随着时间发生任何位置上的移动，流体可以流入或者流出该区域，这就是*控制体*(_Finite Control Volume_)。
+
+如果我们不再只是划定一个区域，而是圈出一个体积为$cal(V)$的流体，并且指定这部分流体为研究对象，包容它们的位置移动和体积变化，这就是*流体微元*模型。
+
+流体的运动是其原子和分子平均运动的延伸。因此，流动的第三种模型可以是一种微观方法，即直接将自然界的根本定律应用于原子和分子，并利用适当的统计平均来定义由此得到的流体性质。这种方法属于动理论的范畴，从长远来看具有许多优势，例如格子玻尔兹曼（_LBM_）方法在湍流问题上取得了一些进展。然而，这超出了本书的讨论范围。
+
+
+
+]
